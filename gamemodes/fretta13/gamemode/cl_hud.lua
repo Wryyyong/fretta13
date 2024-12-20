@@ -1,231 +1,240 @@
-
-local hudScreen = nil
+local HudScreen
 local Alive = false
-local Class = nil
+local Class
 local Team = 0
 local WaitingToRespawn = false
 local InRound = false
 local RoundResult = 0
-local RoundWinner = nil
+local RoundWinner
 local IsObserver = false
 local ObserveMode = 0
-local ObserveTarget = NULL
+local ObserveTarget
 local InVote = false
 
-function GM:AddHUDItem( item, pos, parent )
-	hudScreen:AddItem( item, parent, pos )
+function GM:AddHUDItem(item,pos,parent)
+	HudScreen:AddItem(item,parent,pos)
 end
 
 function GM:HUDNeedsUpdate()
+	local ply = LocalPlayer()
+	if not IsValid(ply) then return false end
 
-	if ( !IsValid( LocalPlayer() ) ) then return false end
+	local plyAlive = ply:Alive()
+	local plyTeam = ply:Team()
 
-	if ( Class != LocalPlayer():GetNWString( "Class", "Default" ) ) then return true end
-	if ( Alive != LocalPlayer():Alive() ) then return true end
-	if ( Team != LocalPlayer():Team() ) then return true end
-	if ( WaitingToRespawn != ( (LocalPlayer():GetNWFloat( "RespawnTime", 0 ) > CurTime()) && LocalPlayer():Team() != TEAM_SPECTATOR && !LocalPlayer():Alive()) ) then return true end
-	if ( InRound != GetGlobalBool( "InRound", false ) ) then return true end
-	if ( RoundResult != GetGlobalInt( "RoundResult", 0 ) ) then return true end
-	if ( RoundWinner != GetGlobalEntity( "RoundWinner", nil ) ) then return true end
-	if ( IsObserver != LocalPlayer():IsObserver() ) then return true end
-	if ( ObserveMode != LocalPlayer():GetObserverMode() ) then return true end
-	if ( ObserveTarget != LocalPlayer():GetObserverTarget() ) then return true end
-	if ( InVote != GAMEMODE:InGamemodeVote() ) then return true end
-	
-	return false
+	return
+		ply:GetNWString("Class","Default") ~= Class
+	or	Alive ~= plyAlive
+	or	Team ~= plyTeam
+	or	WaitingToRespawn ~= (
+			ply:GetNWFloat("RespawnTime",0) > CurTime()
+		and	plyTeam ~= TEAM_SPECTATOR
+		and	not plyAlive
+	)
+	or	InRound ~= GetGlobalBool("InRound",false)
+	or	RoundResult ~= GetGlobalInt("RoundResult",0)
+	or	RoundWinner ~= GetGlobalEntity("RoundWinner",nil)
+	or	IsObserver ~= ply:IsObserver()
+	or	ObserveMode ~= ply:GetObserverMode()
+	or	ObserveTarget ~= ply:GetObserverTarget()
+	or	InVote ~= self:InGamemodeVote()
 end
 
 function GM:OnHUDUpdated()
-	Class = LocalPlayer():GetNWString( "Class", "Default" )
-	Alive = LocalPlayer():Alive()
-	Team = LocalPlayer():Team()
-	WaitingToRespawn = (LocalPlayer():GetNWFloat( "RespawnTime", 0 ) > CurTime()) && LocalPlayer():Team() != TEAM_SPECTATOR && !Alive
-	InRound = GetGlobalBool( "InRound", false )
-	RoundResult = GetGlobalInt( "RoundResult", 0 )
-	RoundWinner = GetGlobalEntity( "RoundWinner", nil )
-	IsObserver = LocalPlayer():IsObserver()
-	ObserveMode = LocalPlayer():GetObserverMode()
-	ObserveTarget = LocalPlayer():GetObserverTarget()
-	InVote = GAMEMODE:InGamemodeVote()
+	local ply = LocalPlayer()
+	if not IsValid(ply) then return false end
+
+	local plyAlive = ply:Alive()
+	local plyTeam = ply:Team()
+
+	Class = ply:GetNWString("Class","Default")
+	Alive = plyAlive
+	Team = plyTeam
+	WaitingToRespawn =
+		ply:GetNWFloat("RespawnTime",0) > CurTime()
+	and	plyTeam ~= TEAM_SPECTATOR
+	and	not plyAlive
+	InRound = GetGlobalBool("InRound",false)
+	RoundResult = GetGlobalInt("RoundResult",0)
+	RoundWinner = GetGlobalEntity("RoundWinner",nil)
+	IsObserver = ply:IsObserver()
+	ObserveMode = ply:GetObserverMode()
+	ObserveTarget = ply:GetObserverTarget()
+	InVote = self:InGamemodeVote()
 end
 
 function GM:OnHUDPaint()
-
 end
 
 function GM:RefreshHUD()
+	if not self:HUDNeedsUpdate() then return end
+	self:OnHUDUpdated()
 
-	if ( !GAMEMODE:HUDNeedsUpdate() ) then return end
-	GAMEMODE:OnHUDUpdated()
-	
-	if ( IsValid( hudScreen ) ) then hudScreen:Remove() end
-	hudScreen = vgui.Create( "DHudLayout" )
-	
-	if ( InVote ) then return end
-	
-	if ( RoundWinner and RoundWinner != NULL ) then
-		GAMEMODE:UpdateHUD_RoundResult( RoundWinner, Alive )
-	elseif ( RoundResult != 0 ) then
-		GAMEMODE:UpdateHUD_RoundResult( RoundResult, Alive )
-	elseif ( IsObserver ) then
-		GAMEMODE:UpdateHUD_Observer( WaitingToRespawn, InRound, ObserveMode, ObserveTarget )
-	elseif ( !Alive ) then
-		GAMEMODE:UpdateHUD_Dead( WaitingToRespawn, InRound )
+	if IsValid(HudScreen) then HudScreen:Remove() end
+	HudScreen = vgui.Create("DHudLayout")
+
+	if InVote then return end
+
+	if
+		RoundWinner and RoundWinner ~= NULL
+	or	RoundResult ~= 0
+	then
+		self:UpdateHUD_RoundResult()
+	elseif IsObserver then
+		self:UpdateHUD_Observer(WaitingToRespawn,InRound,ObserveMode,ObserveTarget)
+	elseif not Alive then
+		self:UpdateHUD_Dead(WaitingToRespawn,InRound)
 	else
-		GAMEMODE:UpdateHUD_Alive( InRound )
+		self:UpdateHUD_Alive(InRound)
 	end
-	
 end
 
 function GM:HUDPaint()
-
 	self.BaseClass:HUDPaint()
-	
-	GAMEMODE:OnHUDPaint()
-	GAMEMODE:RefreshHUD()
-	
+
+	self:OnHUDPaint()
+	self:RefreshHUD()
 end
 
-function GM:UpdateHUD_RoundResult( RoundResult, Alive )
+function GM:UpdateHUD_RoundResult()
+	local txt = GetGlobalString("RRText")
+	local resultType = type(RoundResult)
 
-	local txt = GetGlobalString( "RRText" )
-	
-	if ( type( RoundResult ) == "number" ) && ( team.GetAllTeams()[ RoundResult ] && txt == "" ) then
-		local TeamName = team.GetName( RoundResult )
-		if ( TeamName ) then txt = TeamName .. " Wins!" end
-	elseif ( type( RoundResult ) == "Player" && IsValid( RoundResult ) && txt == "" ) then
+	if resultType == "number" and (team.GetAllTeams()[RoundResult] and txt == "") then
+		local TeamName = team.GetName(RoundResult)
+
+		if TeamName then
+			txt = TeamName .. " Wins!"
+		end
+	elseif resultType == "Player" and IsValid(RoundResult) and txt == "" then
 		txt = RoundResult:Name() .. " Wins!"
 	end
 
-	local RespawnText = vgui.Create( "DHudElement" );
-		RespawnText:SizeToContents()
-		RespawnText:SetText( txt )
-	GAMEMODE:AddHUDItem( RespawnText, 8 )
-
+	local RespawnText = vgui.Create("DHudElement")
+	RespawnText:SizeToContents()
+	RespawnText:SetText(txt)
+	self:AddHUDItem(RespawnText,8)
 end
 
-function GM:UpdateHUD_Observer( bWaitingToSpawn, InRound, ObserveMode, ObserveTarget )
+function GM:UpdateHUD_Observer()
+	local col,lbl,txt = color_white
 
-	local lbl = nil
-	local txt = nil
-	local col = Color( 255, 255, 255 );
-
-	if ( IsValid( ObserveTarget ) && ObserveTarget:IsPlayer() && ObserveTarget != LocalPlayer() && ObserveMode != OBS_MODE_ROAMING ) then
+	if IsValid(ObserveTarget) and ObserveTarget:IsPlayer() and ObserveTarget ~= LocalPlayer() and ObserveMode ~= OBS_MODE_ROAMING then
 		lbl = "SPECTATING"
 		txt = ObserveTarget:Nick()
-		col = team.GetColor( ObserveTarget:Team() );
-	end
-	
-	if ( ObserveMode == OBS_MODE_DEATHCAM || ObserveMode == OBS_MODE_FREEZECAM ) then
-		txt = "You Died!" // were killed by?
-	end
-	
-	if ( txt ) then
-		local txtLabel = vgui.Create( "DHudElement" );
-		txtLabel:SetText( txt )
-		if ( lbl ) then txtLabel:SetLabel( lbl ) end
-		txtLabel:SetTextColor( col )
-		
-		GAMEMODE:AddHUDItem( txtLabel, 2 )		
+		col = team.GetColor(ObserveTarget:Team())
 	end
 
-	
-	GAMEMODE:UpdateHUD_Dead( bWaitingToSpawn, InRound )
-
-end
-
-function GM:UpdateHUD_Dead( bWaitingToSpawn, InRound )
-
-	if ( !InRound && GAMEMODE.RoundBased ) then
-	
-		local RespawnText = vgui.Create( "DHudElement" );
-			RespawnText:SizeToContents()
-			RespawnText:SetText( "Waiting for round start" )
-		GAMEMODE:AddHUDItem( RespawnText, 8 )
-		return
-		
+	if ObserveMode == OBS_MODE_DEATHCAM or ObserveMode == OBS_MODE_FREEZECAM then
+		txt = "You Died!" -- were killed by?
 	end
 
-	if ( bWaitingToSpawn ) then
+	if txt then
+		local txtLabel = vgui.Create("DHudElement")
+		txtLabel:SetText(txt)
 
-		local RespawnTimer = vgui.Create( "DHudCountdown" );
-			RespawnTimer:SizeToContents()
-			RespawnTimer:SetValueFunction( function() return LocalPlayer():GetNWFloat( "RespawnTime", 0 ) end )
-			RespawnTimer:SetLabel( "SPAWN IN" )
-		GAMEMODE:AddHUDItem( RespawnTimer, 8 )
-		return
-
-	end
-	
-	if ( InRound ) then
-	
-		local RoundTimer = vgui.Create( "DHudCountdown" );
-			RoundTimer:SizeToContents()
-			RoundTimer:SetValueFunction( function() 
-											if ( GetGlobalFloat( "RoundStartTime", 0 ) > CurTime() ) then return GetGlobalFloat( "RoundStartTime", 0 )  end 
-											return GetGlobalFloat( "RoundEndTime" ) end )
-			RoundTimer:SetLabel( "TIME" )
-		GAMEMODE:AddHUDItem( RoundTimer, 8 )
-		return
-	
-	end
-	
-	if ( Team != TEAM_SPECTATOR && !Alive ) then
-	
-		local RespawnText = vgui.Create( "DHudElement" );
-			RespawnText:SizeToContents()
-			RespawnText:SetText( "Press Fire to Spawn" )
-		GAMEMODE:AddHUDItem( RespawnText, 8 )
-		
-	end
-
-end
-
-function GM:UpdateHUD_Alive( InRound )
-
-	if ( GAMEMODE.RoundBased || GAMEMODE.TeamBased ) then
-	
-		local Bar = vgui.Create( "DHudBar" )
-		GAMEMODE:AddHUDItem( Bar, 2 )
-
-		if ( GAMEMODE.TeamBased && GAMEMODE.ShowTeamName ) then
-		
-			local TeamIndicator = vgui.Create( "DHudUpdater" );
-				TeamIndicator:SizeToContents()
-				TeamIndicator:SetValueFunction( function() 
-													return team.GetName( LocalPlayer():Team() )
-												end )
-				TeamIndicator:SetColorFunction( function() 
-													return team.GetColor( LocalPlayer():Team() )
-												end )
-				TeamIndicator:SetFont( "HudSelectionText" )
-			Bar:AddItem( TeamIndicator )
-			
+		if lbl then
+			txtLabel:SetLabel(lbl)
 		end
-		
-		if ( GAMEMODE.RoundBased ) then 
-		
-			local RoundNumber = vgui.Create( "DHudUpdater" );
-				RoundNumber:SizeToContents()
-				RoundNumber:SetValueFunction( function() return GetGlobalInt( "RoundNumber", 0 ) end )
-				RoundNumber:SetLabel( "ROUND" )
-			Bar:AddItem( RoundNumber )
-			
-			local RoundTimer = vgui.Create( "DHudCountdown" );
-				RoundTimer:SizeToContents()
-				RoundTimer:SetValueFunction( function() 
-												if ( GetGlobalFloat( "RoundStartTime", 0 ) > CurTime() ) then return GetGlobalFloat( "RoundStartTime", 0 )  end 
-												return GetGlobalFloat( "RoundEndTime" ) end )
-				RoundTimer:SetLabel( "TIME" )
-			Bar:AddItem( RoundTimer )
 
-		end
-		
+		txtLabel:SetTextColor(col)
+		self:AddHUDItem(txtLabel,2)
 	end
 
+	self:UpdateHUD_Dead(WaitingToRespawn,InRound)
 end
 
-function GM:UpdateHUD_AddedTime( iTimeAdded )
-	// to do or to override, your choice
+local function GetRoundTimer()
+	local roundStartTime = GetGlobalFloat("RoundStartTime",0)
+
+	if roundStartTime > CurTime() then
+		return roundStartTime
+	end
+
+	return GetGlobalFloat("RoundEndTime")
 end
-net.Receive( "RoundAddedTime", function( length ) if ( GAMEMODE ) then GAMEMODE:UpdateHUD_AddedTime( net.ReadFloat() ) end end )
+
+function GM:UpdateHUD_Dead()
+	if not InRound and self.RoundBased then
+		local RespawnText = vgui.Create("DHudElement")
+		RespawnText:SizeToContents()
+		RespawnText:SetText("Waiting for round start")
+
+		self:AddHUDItem(RespawnText,8)
+	elseif WaitingToRespawn then
+		local RespawnTimer = vgui.Create("DHudCountdown")
+		RespawnTimer:SizeToContents()
+
+		RespawnTimer:SetValueFunction(function()
+			return LocalPlayer():GetNWFloat("RespawnTime",0)
+		end)
+		RespawnTimer:SetLabel("SPAWN IN")
+
+		self:AddHUDItem(RespawnTimer,8)
+	elseif InRound then
+		local RoundTimer = vgui.Create("DHudCountdown")
+		RoundTimer:SizeToContents()
+		RoundTimer:SetValueFunction(GetRoundTimer)
+		RoundTimer:SetLabel("TIME")
+
+		self:AddHUDItem(RoundTimer,8)
+	elseif Team ~= TEAM_SPECTATOR and not Alive then
+		local RespawnText = vgui.Create("DHudElement")
+		RespawnText:SizeToContents()
+		RespawnText:SetText("Press Fire to Spawn")
+
+		self:AddHUDItem(RespawnText,8)
+	end
+end
+
+function GM:UpdateHUD_Alive()
+	if not (self.RoundBased or self.TeamBased) then return end
+
+	local Bar = vgui.Create("DHudBar")
+	self:AddHUDItem(Bar,2)
+
+	if self.TeamBased and self.ShowTeamName then
+		local plyTeam = LocalPlayer():Team()
+		local TeamIndicator = vgui.Create("DHudUpdater")
+		TeamIndicator:SizeToContents()
+
+		TeamIndicator:SetValueFunction(function()
+			return team.GetName(plyTeam)
+		end)
+
+		TeamIndicator:SetColorFunction(function()
+			return team.GetColor(plyTeam)
+		end)
+
+		TeamIndicator:SetFont("HudSelectionText")
+		Bar:AddItem(TeamIndicator)
+	end
+
+	if self.RoundBased then
+		local RoundNumber = vgui.Create("DHudUpdater")
+		RoundNumber:SizeToContents()
+
+		RoundNumber:SetValueFunction(function()
+			return GetGlobalInt("RoundNumber",0)
+		end)
+
+		RoundNumber:SetLabel("ROUND")
+		Bar:AddItem(RoundNumber)
+
+		local RoundTimer = vgui.Create("DHudCountdown")
+		RoundTimer:SizeToContents()
+		RoundTimer:SetValueFunction(GetRoundTimer)
+		RoundTimer:SetLabel("TIME")
+		Bar:AddItem(RoundTimer)
+	end
+end
+
+-- to do or to override, your choice
+function GM:UpdateHUD_AddedTime()
+end
+
+net.Receive("RoundAddedTime",function()
+	if not GAMEMODE then return end
+
+	GAMEMODE:UpdateHUD_AddedTime(net.ReadFloat())
+end)

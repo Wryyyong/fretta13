@@ -1,64 +1,62 @@
+local PlayerModel = Model("models/player.mdl")
 
-local CLASS = {}
+local ClassDefault = {
+	["DisplayName"] = "Default Class",
+	["WalkSpeed"] = 400,
+	["CrouchedWalkSpeed"] = 0.2,
+	["RunSpeed"] = 600,
+	["DuckSpeed"] = 0.2,
+	["JumpPower"] = 200,
+	["PlayerModel"] = PlayerModel,
+	["DrawTeamRing"] = false,
+	["DrawViewModel"] = true,
+	["CanUseFlashlight"] = true,
+	["MaxHealth"] = 100,
+	["StartHealth"] = 100,
+	["StartArmor"] = 0,
+	["RespawnTime"] = 0, -- 0 means use the default spawn time chosen by gamemode
+	["DropWeaponOnDie"] = false,
+	["TeammateNoCollide"] = true,
+	["AvoidPlayers"] = true, -- Automatically avoid players that we're no colliding
+	["Selectable"] = true, -- When false, this disables all the team checking
+	["FullRotation"] = false, -- Allow the player's model to rotate upwards, etc etc
+}
 
-CLASS.DisplayName			= "Default Class"
-CLASS.WalkSpeed 			= 400
-CLASS.CrouchedWalkSpeed 	= 0.2
-CLASS.RunSpeed				= 600
-CLASS.DuckSpeed				= 0.2
-CLASS.JumpPower				= 200
-CLASS.PlayerModel			= "models/player.mdl"
-CLASS.DrawTeamRing			= false
-CLASS.DrawViewModel			= true
-CLASS.CanUseFlashlight      = true
-CLASS.MaxHealth				= 100
-CLASS.StartHealth			= 100
-CLASS.StartArmor			= 0
-CLASS.RespawnTime           = 0 // 0 means use the default spawn time chosen by gamemode
-CLASS.DropWeaponOnDie		= false
-CLASS.TeammateNoCollide 	= true
-CLASS.AvoidPlayers			= true // Automatically avoid players that we're no colliding
-CLASS.Selectable			= true // When false, this disables all the team checking
-CLASS.FullRotation			= false // Allow the player's model to rotate upwards, etc etc
-
-function CLASS:Loadout( pl )
-
-	pl:GiveAmmo( 255,	"Pistol", 		true )
-	
-	pl:Give( "weapon_pistol" )
-
+function ClassDefault:Loadout(ply)
+	ply:GiveAmmo(255,"Pistol",true)
+	ply:Give("weapon_pistol")
 end
 
-function CLASS:OnSpawn( pl )
+function ClassDefault:OnSpawn()
 end
 
-function CLASS:OnDeath( pl, attacker, dmginfo )
+function ClassDefault:OnDeath()
 end
 
-function CLASS:Think( pl )
+function ClassDefault:Think()
 end
 
-function CLASS:Move( pl, mv )
+function ClassDefault:Move()
 end
 
-function CLASS:OnKeyPress( pl, key )
+function ClassDefault:OnKeyPress()
 end
 
-function CLASS:OnKeyRelease( pl, key )
+function ClassDefault:OnKeyRelease()
 end
 
-function CLASS:ShouldDrawLocalPlayer( pl )
+function ClassDefault:ShouldDrawLocalPlayer()
 	return false
 end
 
-function CLASS:CalcView( ply, origin, angles, fov )
+function ClassDefault:CalcView()
 end
 
-player_class.Register( "Default", CLASS )
+local ClassSpectator = {
+	["DisplayName"] = "Spectator Class",
+	["DrawTeamRing"] = false,
+	["PlayerModel"] = PlayerModel,
+}
 
-local CLASS = {}
-CLASS.DisplayName			= "Spectator Class"
-CLASS.DrawTeamRing			= false
-CLASS.PlayerModel			= "models/player.mdl"
-
-player_class.Register( "Spectator", CLASS )
+player_class.Register("Default",ClassDefault)
+player_class.Register("Spectator",ClassSpectator)

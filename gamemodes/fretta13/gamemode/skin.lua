@@ -1,446 +1,388 @@
-/*
+--[[
 	skin.lua - Fretta Derma Skin
 	-----------------------------------------------------
 	This is the default Fretta skin for Derma. If you want to override the look of Fretta,
 	base a skin of this and change GM.HudSkin.
-*/
+--]]
 
 local surface = surface
 local draw = draw
 local Color = Color
 
-local SKIN = {}
+local SKIN = {
+	["PrintName"] = "",
+	["Author"] = "",
+	["DermaVersion"] = 1,
 
-SKIN.PrintName 		= ""
-SKIN.Author 		= ""
-SKIN.DermaVersion	= 1
+	["bg_color"] = Color(100,100,100,255),
+	["bg_color_sleep"] = Color(70,70,70,255),
+	["bg_color_dark"] = Color(50,50,50,255),
+	["bg_color_bright"] = Color(220,220,220,255),
 
-SKIN.bg_color 					= Color( 100, 100, 100, 255 )
-SKIN.bg_color_sleep 			= Color( 70, 70, 70, 255 )
-SKIN.bg_color_dark				= Color( 50, 50, 50, 255 )
-SKIN.bg_color_bright			= Color( 220, 220, 220, 255 )
+	["fontFrame"] = "Default",
 
-SKIN.fontFrame					= "Default"
+	["control_color"] = Color(180,180,180,255),
+	["control_color_highlight"] = Color(220,220,220,255),
+	["control_color_active"] = Color(110,150,255,255),
+	["control_color_bright"] = Color(255,200,100,255),
+	["control_color_dark"] = Color(100,100,100,255),
 
-SKIN.control_color 				= Color( 180, 180, 180, 255 )
-SKIN.control_color_highlight	= Color( 220, 220, 220, 255 )
-SKIN.control_color_active 		= Color( 110, 150, 255, 255 )
-SKIN.control_color_bright 		= Color( 255, 200, 100, 255 )
-SKIN.control_color_dark 		= Color( 100, 100, 100, 255 )
+	["bg_alt1"] = Color(50,50,50,255),
+	["bg_alt2"] = Color(55,55,55,255),
 
-SKIN.bg_alt1 					= Color( 50, 50, 50, 255 )
-SKIN.bg_alt2 					= Color( 55, 55, 55, 255 )
+	["listview_hover"] = Color(70,70,70,255),
+	["listview_selected"] = Color(100,170,220,255),
 
-SKIN.listview_hover				= Color( 70, 70, 70, 255 )
-SKIN.listview_selected			= Color( 100, 170, 220, 255 )
+	["text_bright"] = Color(255,255,255,255),
+	["text_normal"] = Color(180,180,180,255),
+	["text_dark"] = Color(20,20,20,255),
+	["text_highlight"] = Color(255,20,20,255),
 
-SKIN.text_bright				= Color( 255, 255, 255, 255 )
-SKIN.text_normal				= Color( 180, 180, 180, 255 )
-SKIN.text_dark					= Color( 20, 20, 20, 255 )
-SKIN.text_highlight				= Color( 255, 20, 20, 255 )
+	["texGradientUp"] = Material("gui/gradient_up"),
+	["texGradientDown"] = Material("gui/gradient_down"),
 
-SKIN.texGradientUp				= Material( "gui/gradient_up" )
-SKIN.texGradientDown			= Material( "gui/gradient_down" )
+	["panel_transback"] = Color(255,255,255,50),
+	["tooltip"] = Color(255,245,175,255),
+	["colPropertySheet"] = Color(170,170,170,255),
 
-SKIN.combobox_selected			= SKIN.listview_selected
+	["colTabInactive"] = Color(170,170,170,155),
+	["colTabShadow"] = Color(60,60,60,255),
+	["colTabText"] = Color(255,255,255,255),
+	["colTabTextInactive"] = Color(0,0,0,155),
 
-SKIN.panel_transback			= Color( 255, 255, 255, 50 )
-SKIN.tooltip					= Color( 255, 245, 175, 255 )
+	["fontTab"] = "Default",
+	["colCollapsibleCategory"] = Color(255,255,255,20),
 
-SKIN.colPropertySheet 			= Color( 170, 170, 170, 255 )
-SKIN.colTab			 			= SKIN.colPropertySheet
-SKIN.colTabInactive				= Color( 170, 170, 170, 155 )
-SKIN.colTabShadow				= Color( 60, 60, 60, 255 )
-SKIN.colTabText		 			= Color( 255, 255, 255, 255 )
-SKIN.colTabTextInactive			= Color( 0, 0, 0, 155 )
-SKIN.fontTab					= "Default"
+	["colCategoryText"] = Color(255,255,255,255),
+	["colCategoryTextInactive"] = Color(200,200,200,255),
 
-SKIN.colCollapsibleCategory		= Color( 255, 255, 255, 20 )
+	["fontCategoryHeader"] = "TabLarge",
+	["colNumberWangBG"] = Color(255,240,150,255),
 
-SKIN.colCategoryText			= Color( 255, 255, 255, 255 )
-SKIN.colCategoryTextInactive	= Color( 200, 200, 200, 255 )
-SKIN.fontCategoryHeader			= "TabLarge"
+	["colTextEntryBG"] = Color(240,240,240,255),
+	["colTextEntryBorder"] = Color(20,20,20,255),
+	["colTextEntryText"] = Color(20,20,20,255),
+	["colTextEntryTextHighlight"] = Color(20,200,250,255),
+	["colTextEntryTextHighlight"] = Color(20,200,250,255),
 
-SKIN.colNumberWangBG			= Color( 255, 240, 150, 255 )
-SKIN.colTextEntryBG				= Color( 240, 240, 240, 255 )
-SKIN.colTextEntryBorder			= Color( 20, 20, 20, 255 )
-SKIN.colTextEntryText			= Color( 20, 20, 20, 255 )
-SKIN.colTextEntryTextHighlight	= Color( 20, 200, 250, 255 )
-SKIN.colTextEntryTextHighlight	= Color( 20, 200, 250, 255 )
+	["colMenuBG"] = Color(255,255,255,200),
+	["colMenuBorder"] = Color(0,0,0,200),
 
-SKIN.colMenuBG					= Color( 255, 255, 255, 200 )
-SKIN.colMenuBorder				= Color( 0, 0, 0, 200 )
+	["colButtonText"] = Color(0,0,0,250),
+	["colButtonTextDisabled"] = Color(0,0,0,100),
 
-SKIN.colButtonText				= Color( 0, 0, 0, 250 )
-SKIN.colButtonTextDisabled		= Color( 0, 0, 0, 100 )
-SKIN.colButtonBorder			= Color( 20, 20, 20, 255 )
-SKIN.colButtonBorderHighlight	= Color( 255, 255, 255, 50 )
-SKIN.colButtonBorderShadow		= Color( 0, 0, 0, 100 )
-SKIN.fontButton					= "Default"
+	["colButtonBorder"] = Color(20,20,20,255),
+	["colButtonBorderHighlight"] = Color(255,255,255,50),
+	["colButtonBorderShadow"] = Color(0,0,0,100),
+
+	["fontButton"] = "Default",
+
+	-- basic deathmsg appearance settings
+	["deathMessageBackgroundCol"] = Color(46,43,42,220),
+	["deathMessageBackgroundLocal"] = Color(75,75,75,200), -- this is the colour that the background is when the local player is involved in the deathmsg, so it stands out.
+	["deathMessageActionColor"] = Color(200,200,200),
+}
+SKIN.combobox_selected = SKIN.listview_selected
+SKIN.colTab = SKIN.colPropertySheet
 
 -- enum for draw order
-DM_ORDER_LATESTATTOP = 1;
-DM_ORDER_LATESTATBOTTOM = 2;
+DM_ORDER_LATESTATTOP = 1
+DM_ORDER_LATESTATBOTTOM = 2
 
--- basic deathmsg appearance settings
-SKIN.deathMessageBackgroundCol			= Color( 46, 43, 42, 220 );
-SKIN.deathMessageBackgroundLocal		= Color( 75, 75, 75, 200 ); -- this is the colour that the background is when the local player is involved in the deathmsg, so it stands out.
-SKIN.deathMessageActionColor			= Color( 200, 200, 200 );
+local matBlurScreen = Material("pp/blurscreen")
 
-local matBlurScreen = Material( "pp/blurscreen" )
-
-
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    DrawGenericBackground
----------------------------------------------------------*/
-function SKIN:DrawGenericBackground( x, y, w, h, color )
-
-	draw.RoundedBox( 4, x, y, w, h, color )
-
+---------------------------------------------------------]]--
+function SKIN:DrawGenericBackground(x,y,w,h,color)
+	draw.RoundedBox(4,x,y,w,h,color)
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    DrawLinedButtonBorder
----------------------------------------------------------*/
-function SKIN:DrawLinedButtonBorder( x, y, w, h, depressed )
-
-	surface.SetDrawColor( Color( 0, 0, 0, 200 ) )
-	surface.DrawOutlinedRect( x+1, y+1, w-2, h-2 )
-
+---------------------------------------------------------]]--
+function SKIN:DrawLinedButtonBorder(x,y,w,h)
+	surface.SetDrawColor(0,0,0,200)
+	surface.DrawOutlinedRect(x + 1,y + 1,w - 2,h - 2)
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
 	Button
----------------------------------------------------------*/
-function SKIN:PaintCancelButton( panel )
+---------------------------------------------------------]]--
+function SKIN:PaintCancelButton(panel)
+	if not panel.m_bBackground then return end
 
-	local w, h = panel:GetSize()
-
-	if ( panel.m_bBackground ) then
-	
-		local col = self.control_color
-		
-		if ( panel:GetDisabled() ) then
-			col = self.control_color_dark
-		elseif ( panel.Depressed ) then
-			col = self.control_color_active
-		elseif ( panel.Hovered ) then
-			col = self.control_color_highlight
-		end
-		
-		if ( panel.m_colBackground ) then
-		
-			col = table.Copy( panel.m_colBackground )
-			
-			if ( panel:GetDisabled() ) then
-				col.r = math.Clamp( col.r * 0.7, 0, 255 )
-				col.g = math.Clamp( col.g * 0.7, 0, 255 )
-				col.b = math.Clamp( col.b * 0.7, 0, 255 )
-				col.a = 20
-			elseif ( panel.Depressed ) then
-				col.r = math.Clamp( col.r + 100, 0, 255 )
-				col.g = math.Clamp( col.g + 100, 0, 255 )
-				col.b = math.Clamp( col.b + 100, 0, 255 )
-			elseif ( panel.Hovered ) then
-				col.r = math.Clamp( col.r + 30, 0, 255 )
-				col.g = math.Clamp( col.g + 30, 0, 255 )
-				col.b = math.Clamp( col.b + 30, 0, 255 )
-			end
-		end
-		
-		surface.SetDrawColor( col.r, col.g, col.b, col.a )
-		panel:DrawFilledRect()
-	
+	local col = self.control_color
+	if panel:GetDisabled() then
+		col = self.control_color_dark
+	elseif panel.Depressed then
+		col = self.control_color_active
+	elseif panel.Hovered then
+		col = self.control_color_highlight
 	end
 
+	if panel.m_colBackground then
+		col = table.Copy(panel.m_colBackground)
+
+		if panel:GetDisabled() then
+			col.r = math.Clamp(col.r * 0.7,0,255)
+			col.g = math.Clamp(col.g * 0.7,0,255)
+			col.b = math.Clamp(col.b * 0.7,0,255)
+			col.a = 20
+		elseif panel.Depressed then
+			col.r = math.Clamp(col.r + 100,0,255)
+			col.g = math.Clamp(col.g + 100,0,255)
+			col.b = math.Clamp(col.b + 100,0,255)
+		elseif panel.Hovered then
+			col.r = math.Clamp(col.r + 30,0,255)
+			col.g = math.Clamp(col.g + 30,0,255)
+			col.b = math.Clamp(col.b + 30,0,255)
+		end
+	end
+
+	surface.SetDrawColor(col.r,col.g,col.b,col.a)
+
+	panel:DrawFilledRect()
 end
 
 SKIN.PaintSelectButton = SKIN.PaintCancelButton
+function SKIN:PaintOverCancelButton(panel)
+	local w,h = panel:GetSize()
 
-function SKIN:PaintOverCancelButton( panel )
-
-	local w, h = panel:GetSize()
-	
-	if ( panel.m_bBorder ) then
-		self:DrawLinedButtonBorder( 0, 0, w, h, panel.Depressed )
-	end
-
+	if not panel.m_bBorder then return end
+	self:DrawLinedButtonBorder(0,0,w,h,panel.Depressed)
 end
 
 SKIN.PaintOverSelectButton = SKIN.PaintOverCancelButton
 
-function SKIN:SchemeCancelButton( panel )
+local function SchemeButton(skin,panel)
+	panel:SetFontInternal("FRETTA_SMALL")
+	panel:SetTextColor(panel:GetDisabled() and skin.colButtonTextDisabled or skin.colButtonText)
 
-	panel:SetFontInternal( "FRETTA_SMALL" )
-	
-	if ( panel:GetDisabled() ) then
-		panel:SetTextColor( self.colButtonTextDisabled )
-	else
-		panel:SetTextColor( self.colButtonText )
-	end
-	
-	DLabel.ApplySchemeSettings( panel )
-
+	DLabel.ApplySchemeSettings(panel)
 end
 
-function SKIN:SchemeSelectButton( panel )
+SKIN.SchemeCancelButton = SchemeButton
+SKIN.SchemeSelectButton = SchemeButton
 
-	panel:SetFontInternal( "FRETTA_SMALL" )
-	
-	if ( panel:GetDisabled() ) then
-		panel:SetTextColor( self.colButtonTextDisabled )
-	else
-		panel:SetTextColor( self.colButtonText )
-	end
-	
-	DLabel.ApplySchemeSettings( panel )
-
-end
-
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
 	ListViewLine
----------------------------------------------------------*/
-function SKIN:PaintListViewLine( panel )
-
-
+---------------------------------------------------------]]--
+function SKIN:PaintListViewLine()
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
 	ListViewLine
----------------------------------------------------------*/
-function SKIN:PaintListView( panel )
-
-
+---------------------------------------------------------]]--
+function SKIN:PaintListView()
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
 	ListViewLabel
----------------------------------------------------------*/
-function SKIN:PaintScorePanelHeader( panel )
-
-	//surface.SetDrawColor( panel.cTeamColor )	
-	//panel:DrawFilledRect()
-	
+---------------------------------------------------------]]--
+function SKIN:PaintScorePanelHeader()
+	--(panel)
+	--surface.SetDrawColor(panel.cTeamColor)	
+	--panel:DrawFilledRect()
 end
 
-/*---------------------------------------------------------
+local BoxHeight = 21
+local ColorPlyAlive = Color(60,60,60,255)
+local ColorPlyLocal = Color(90,90,90,255)
+local ColorPlyDefault = Color(70,70,70,255)
+--[[---------------------------------------------------------
 	ListViewLabel
----------------------------------------------------------*/
-function SKIN:PaintScorePanelLine( panel )
+---------------------------------------------------------]]--
+function SKIN:PaintScorePanelLine(panel)
+	local ply,tall,color = panel.pPlayer,panel:GetTall()
 
-	local Tall = panel:GetTall()
-	local BoxHeight = 21
-	
-	if ( !IsValid( panel.pPlayer ) || !panel.pPlayer:Alive() ) then
-		draw.RoundedBox( 4, 0, Tall*0.5 - BoxHeight*0.5, panel:GetWide(), BoxHeight, Color( 60, 60, 60, 255 ) )
-		return
+	if not (IsValid(ply) and ply:Alive()) then
+		color = ColorPlyAlive
 	end
 
-	if ( panel.pPlayer == LocalPlayer() ) then
-		draw.RoundedBox( 4, 0, Tall*0.5 - BoxHeight*0.5, panel:GetWide(), BoxHeight, Color( 90, 90, 90, 255 ) )
-		return
+	if ply == LocalPlayer() then
+		color = ColorPlyLocal
 	end
 
-	draw.RoundedBox( 4, 0, Tall*0.5 - BoxHeight*0.5, panel:GetWide(), BoxHeight, Color( 70, 70, 70, 255 ) )
-		
+	color = color or ColorPlyDefault
+
+	draw.RoundedBox(4,0,tall * 0.5 - BoxHeight * 0.5,panel:GetWide(),BoxHeight,color)
 end
 
-/*---------------------------------------------------------
+local ColorScorePanel = Color(200,200,200,150)
+--[[---------------------------------------------------------
 	PaintScorePanel
----------------------------------------------------------*/
-function SKIN:PaintScorePanel( panel )
+---------------------------------------------------------]]--
+function SKIN:PaintScorePanel(panel)
+	surface.SetMaterial(matBlurScreen)
+	surface.SetDrawColor(255,255,255,255)
 
-	surface.SetMaterial( matBlurScreen )	
-	surface.SetDrawColor( 255, 255, 255, 255 )
-		
-	local x, y = panel:LocalToScreen( 0, 0 )
-	
-	matBlurScreen:SetFloat( "$blur", 5 )
+	local x,y = panel:LocalToScreen(0,0)
+	--matBlurScreen:SetFloat("$blur",3)
+	matBlurScreen:SetFloat("$blur",5)
+
 	render.UpdateScreenEffectTexture()
-	surface.DrawTexturedRect( x*-1, y*-1, ScrW(), ScrH() )
-	
-	//matBlurScreen:SetFloat( "$blur", 3 )
-	//render.UpdateScreenEffectTexture()
-	//surface.DrawTexturedRect( x*-1, y*-1, ScrW(), ScrH() )
-		
-	draw.RoundedBox( 8, 0, 8, panel:GetWide(), panel:GetTall()-8, Color( 200, 200, 200, 150 ) )
-	
+	surface.DrawTexturedRect(x * -1,y * -1,ScrW(),ScrH())
+
+	draw.RoundedBox(8,0,8,panel:GetWide(),panel:GetTall() - 8,ColorScorePanel)
 end
 
-
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
 	LayoutTeamScoreboardHeader
----------------------------------------------------------*/
-function SKIN:LayoutTeamScoreboardHeader( panel )
+---------------------------------------------------------]]--
+function SKIN:LayoutTeamScoreboardHeader(panel)
+	local teamName,teamScore = panel.TeamName,panel.TeamScore
 
-	panel.TeamName:StretchToParent( 0, 0, 0, 0 )
-	panel.TeamName:SetTextInset( 8, 0 )
-	panel.TeamName:SetColor( color_white )
-	panel.TeamName:SetFontInternal( "FRETTA_MEDIUM" )
-	
-	panel.TeamScore:StretchToParent( 0, 0, 0, 0 )
-	panel.TeamScore:SetContentAlignment( 6 )
-	panel.TeamScore:SetTextInset( 8, 0 )
-	panel.TeamScore:SetColor( color_white )
-	panel.TeamScore:SetFontInternal( "FRETTA_MEDIUM" )
+	teamName:StretchToParent(0,0,0,0)
+	teamName:SetTextInset(8,0)
+	teamName:SetColor(color_white)
+	teamName:SetFontInternal("FRETTA_MEDIUM")
 
+	teamScore:StretchToParent(0,0,0,0)
+	teamScore:SetContentAlignment(6)
+	teamScore:SetTextInset(8,0)
+	teamScore:SetColor(color_white)
+	teamScore:SetFontInternal("FRETTA_MEDIUM")
 end
 
-function SKIN:PaintTeamScoreboardHeader( panel )
+function SKIN:PaintTeamScoreboardHeader(panel)
+	local color = team.GetColor(panel.iTeamID)
 
-	local Color = team.GetColor( panel.iTeamID )
-	draw.RoundedBox( 4, 0, 0, panel:GetWide(), panel:GetTall()*2, Color )
-
+	draw.RoundedBox(4,0,0,panel:GetWide(),panel:GetTall() * 2,color)
 end
 
-function SKIN:SchemeScorePanelLabel( panel )
-
-	--panel:SetTextColor( GAMEMODE:GetTeamColor( panel.pPlayer ) )
-	panel:SetTextColor( color_white )
-	panel:SetFontInternal( "FRETTA_MEDIUM_SHADOW" )
-
+function SKIN:SchemeScorePanelLabel(panel)
+	--panel:SetTextColor(GAMEMODE:GetTeamColor(panel.pPlayer))
+	panel:SetTextColor(color_white)
+	panel:SetFontInternal("FRETTA_MEDIUM_SHADOW")
 end
 
-function SKIN:PaintScorePanelLabel( panel )
-
-	if ( !IsValid( panel.pPlayer ) || !panel.pPlayer:Alive() ) then
-		panel:SetAlpha( 125 )
-	else
-		panel:SetAlpha( 255 )
-	end
-		
+function SKIN:PaintScorePanelLabel(panel)
+	panel:SetAlpha((IsValid(panel.pPlayer) and panel.pPlayer:Alive()) and 125 or 255)
 end
 
-function SKIN:SchemeScorePanelHeaderLabel( panel )
-
-	panel:SetTextColor( Color( 70, 70, 70, 255 ) )
-	panel:SetFontInternal( "HudSelectionText" )
-		
+function SKIN:SchemeScorePanelHeaderLabel(panel)
+	panel:SetTextColor(ColorPlyDefault)
+	panel:SetFontInternal("HudSelectionText")
 end
 
-function SKIN:SchemeSpectatorInfo( panel )
-
-	panel:SetTextColor( Color( 255, 255, 255, 255 ) )
-	panel:SetFontInternal( "FRETTA_SMALL" )
-		
+function SKIN:SchemeSpectatorInfo(panel)
+	panel:SetTextColor(color_white)
+	panel:SetFontInternal("FRETTA_SMALL")
 end
 
-/*---------------------------------------------------------
+local ColorScoreHeader = Color(50,90,160)
+--[[---------------------------------------------------------
 	ScoreHeader
----------------------------------------------------------*/
-function SKIN:PaintScoreHeader( panel )
-
-	draw.RoundedBox( 8, 0, 0, panel:GetWide(), panel:GetTall()*2, Color( 50, 90, 160 ) )
-		
+---------------------------------------------------------]]--
+function SKIN:PaintScoreHeader(panel)
+	draw.RoundedBox(8,0,0,panel:GetWide(),panel:GetTall() * 2,ColorScoreHeader)
 end
 
-function SKIN:LayoutScoreHeader( panel )
+function SKIN:LayoutScoreHeader(panel)
+	local hostName,gamemodeName = panel.HostName,panel.GamemodeName
 
-	panel.HostName:SizeToContents()
-	panel.HostName:SetPos( 0, 0 )
-	panel.HostName:CenterHorizontal()
-	
-	panel.GamemodeName:SizeToContents()
-	panel.GamemodeName:MoveBelow( panel.HostName, 0 )
-	panel.GamemodeName:CenterHorizontal()
-	
-	panel:SetTall( panel.GamemodeName.y + panel.GamemodeName:GetTall() + 4 ) 
-		
+	hostName:SizeToContents()
+	hostName:SetPos(0,0)
+	hostName:CenterHorizontal()
+
+	gamemodeName:SizeToContents()
+	gamemodeName:MoveBelow(panel.HostName,0)
+	gamemodeName:CenterHorizontal()
+
+	panel:SetTall(gamemodeName.y + gamemodeName:GetTall() + 4)
 end
 
-function SKIN:SchemeScoreHeader( panel )
+function SKIN:SchemeScoreHeader(panel)
+	local hostName,gamemodeName = panel.HostName,panel.GamemodeName
 
-	panel.HostName:SetTextColor( Color( 255, 255, 255, 255 ) )
-	panel.HostName:SetFontInternal( "FRETTA_LARGE_SHADOW" )
-	
-	panel.GamemodeName:SetTextColor( Color( 255, 255, 255, 255 ) )
-	panel.GamemodeName:SetFontInternal( "FRETTA_MEDIUM_SHADOW" )
-		
+	hostName:SetTextColor(color_white)
+	hostName:SetFontInternal("FRETTA_LARGE_SHADOW")
+
+	gamemodeName:SetTextColor(color_white)
+	gamemodeName:SetFontInternal("FRETTA_MEDIUM_SHADOW")
 end
 
-/*---------------------------------------------------------
+local ColorNoticeHighlightOn = Color(90,90,90,200)
+local ColorNoticeHighlightOff = Color(20,20,20,190)
+--[[---------------------------------------------------------
 	DeathMessages
----------------------------------------------------------*/
-function SKIN:PaintGameNotice( panel )
+---------------------------------------------------------]]--
+function SKIN:PaintGameNotice(panel)
+	local color = panel.m_bHighlight and ColorNoticeHighlightOn or ColorNoticeHighlightOff
 
-	if ( panel.m_bHighlight ) then
-		draw.RoundedBox( 4, 0, 0, panel:GetWide(), panel:GetTall(), Color( 90, 90, 90, 200 ) )
-		return
-	end
-
-	draw.RoundedBox( 4, 0, 0, panel:GetWide(), panel:GetTall(), Color( 20, 20, 20, 190 ) )
-	
+	draw.RoundedBox(4,0,0,panel:GetWide(),panel:GetTall(),color)
 end
 
-function SKIN:SchemeGameNoticeLabel( panel )
-
-	panel:SetFontInternal( "FRETTA_NOTIFY" );
-	DLabel.ApplySchemeSettings( panel )
-	
+function SKIN:SchemeGameNoticeLabel(panel)
+	panel:SetFontInternal("FRETTA_NOTIFY")
+	DLabel.ApplySchemeSettings(panel)
 end
 
-/*---------------------------------------------------------
+local ColorGamemodeButtonDefault = Color(255,255,255,10)
+local ColorGamemodeButtonDisabled = Color(0,0,0,10)
+local ColorGamemodeButtonDepressed = Color(255,255,255,50)
+local ColorGamemodeButtonHovered = Color(255,255,255,20)
+--[[---------------------------------------------------------
 	GamemodeButton
----------------------------------------------------------*/
-function SKIN:PaintGamemodeButton( panel )
+---------------------------------------------------------]]--
+function SKIN:PaintGamemodeButton(panel)
+	local w,h = panel:GetSize()
+	local color = ColorGamemodeButtonDefault
 
-	local w, h = panel:GetSize()
-	
-	local col = Color( 255, 255, 255, 10 )
-	
-	if ( panel:GetDisabled() ) then
-		col = Color( 0, 0, 0, 10 )
-	elseif ( panel.Depressed ) then
-		col = Color( 255, 255, 255, 50 )
-	elseif ( panel.Hovered ) then
-		col = Color( 255, 255, 255, 20 )
+	if panel:GetDisabled() then
+		color = ColorGamemodeButtonDisabled
+	elseif panel.Depressed then
+		color = ColorGamemodeButtonDepressed
+	elseif panel.Hovered then
+		color = ColorGamemodeButtonHovered
 	end
-	
-	if ( panel.bgColor != nil ) then col = panel.bgColor end
 
-	draw.RoundedBox( 4, 0, 0, w, h, col )
+	if panel.bgColor ~= nil then
+		color = panel.bgColor
+	end
 
+	draw.RoundedBox(4,0,0,w,h,color)
 end
 
-function SKIN:SchemeGamemodeButton( panel )
-
-	panel:SetTextColor( color_white )
-	panel:SetFontInternal( "FRETTA_MEDIUM_SHADOW" )
-	panel:SetContentAlignment( 4 )
-	panel:SetTextInset( 8, 0 )
-
+function SKIN:SchemeGamemodeButton(panel)
+	panel:SetTextColor(color_white)
+	panel:SetFontInternal("FRETTA_MEDIUM_SHADOW")
+	panel:SetContentAlignment(4)
+	panel:SetTextInset(8,0)
 end
 
-
-/*---------------------------------------------------------
+local ColorPanelButtonDefault = Color(160,160,160,255)
+local ColorPanelButtonDisabled = Color(100,100,100,255)
+local ColorPanelButtonDepressed = Color(150,210,255,255)
+local ColorPanelButtonHovered = Color(200,200,200,255)
+--[[---------------------------------------------------------
 	PanelButton
----------------------------------------------------------*/
-function SKIN:PaintPanelButton( panel )
+---------------------------------------------------------]]--
+function SKIN:PaintPanelButton(panel)
+	local color = ColorPanelButtonDefault
 
-	local w, h = panel:GetSize()
-	
-	local col = Color( 160, 160, 160, 255 )
-	
-	if ( panel:GetDisabled() ) then
-		col = Color( 100, 100, 100, 255 )
-	elseif ( panel.Depressed ) then
-		col = Color( 150, 210, 255, 255 )
-	elseif ( panel.Hovered ) then
-		col = Color( 200, 200, 200, 255 )
+	if panel:GetDisabled() then
+		color = ColorPanelButtonDisabled
+	elseif panel.Depressed then
+		color = ColorPanelButtonDepressed
+	elseif panel.Hovered then
+		color = ColorPanelButtonHovered
 	end
-		
-	if ( panel.bgColor != nil ) then col = panel.bgColor end
 
-	surface.SetDrawColor( col )
+	if panel.bgColor ~= nil then
+		color = panel.bgColor
+	end
+
+	surface.SetDrawColor(color)
+
 	panel:DrawFilledRect()
-
 end
 
-function SKIN:PaintOverPanelButton( panel )
+function SKIN:PaintOverPanelButton(panel)
+	local w,h = panel:GetSize()
 
-	local w, h = panel:GetSize()
-	self:DrawLinedButtonBorder( 0, 0, w, h, panel.Depressed )
-
+	self:DrawLinedButtonBorder(0,0,w,h,panel.Depressed)
 end
 
-derma.DefineSkin( "SimpleSkin", "", SKIN )
+derma.DefineSkin("SimpleSkin","",SKIN)

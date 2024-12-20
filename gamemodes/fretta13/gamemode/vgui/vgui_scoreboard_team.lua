@@ -1,222 +1,203 @@
-local PANEL = {}
+local TeamScoreboardHeader = {}
+Derma_Hook(TeamScoreboardHeader,"Paint","Paint","TeamScoreboardHeader")
+Derma_Hook(TeamScoreboardHeader,"ApplySchemeSettings","Scheme","TeamScoreboardHeader")
+Derma_Hook(TeamScoreboardHeader,"PerformLayout","Layout","TeamScoreboardHeader")
 
-Derma_Hook( PANEL, 	"Paint", 				"Paint", 	"TeamScoreboardHeader" )
-Derma_Hook( PANEL, 	"ApplySchemeSettings", 	"Scheme", 	"TeamScoreboardHeader" )
-Derma_Hook( PANEL, 	"PerformLayout", 		"Layout", 	"TeamScoreboardHeader" )
-	
-function PANEL:Init()
-
+function TeamScoreboardHeader:Init()
 	self.Columns = {}
 	self.iTeamID = 0
 	self.PlayerCount = 0
-	
-	self.TeamName = vgui.Create( "DLabel", self )
-	self.TeamScore = vgui.Create( "DLabel", self )
-
+	self.TeamName = vgui.Create("DLabel",self)
+	self.TeamScore = vgui.Create("DLabel",self)
 end
 
-function PANEL:Setup( iTeam, pMainScoreboard )
-
-	self.TeamName:SetText( team.GetName( iTeam ) )
+function TeamScoreboardHeader:Setup(iTeam)
+	self.TeamName:SetText(team.GetName(iTeam))
 	self.iTeamID = iTeam
-
 end
 
-function PANEL:Think()
+function TeamScoreboardHeader:Think()
+	local count = #team.GetPlayers(self.iTeamID)
 
-	local Count = #team.GetPlayers( self.iTeamID )
-	if ( self.PlayerCount != Count ) then
-		self.PlayerCount = Count
-		self.TeamName:SetText( team.GetName( self.iTeamID ) .. " (" .. self.PlayerCount .. " Players)" )
+	if self.PlayerCount ~= count then
+		self.PlayerCount = count
+		self.TeamName:SetText(team.GetName(self.iTeamID) .. " (" .. count .. " Players)")
 	end
-	
-	self.TeamScore:SetText( team.GetScore( self.iTeamID ) )
 
+	self.TeamScore:SetText(team.GetScore(self.iTeamID))
 end
 
-derma.DefineControl( "TeamScoreboardHeader", "", PANEL, "Panel" )
+derma.DefineControl("TeamScoreboardHeader","",TeamScoreboardHeader,"Panel")
 
+local TeamScoreboard = {}
 
-
-
-local PANEL = {}
-
-function PANEL:Init()
-
+function TeamScoreboard:Init()
 	self.Columns = {}
 
-	self.List = vgui.Create( "DListView", self )
-	self.List:SetSortable( false )
-	self.List:DisableScrollbar()
-	self.List:SetMultiSelect( false )
-	
-	self.Header = vgui.Create( "TeamScoreboardHeader", self )
+	local boardList = vgui.Create("DListView",self)
+	self.List = boardList
+	boardList:SetSortable(false)
+	boardList:DisableScrollbar()
+	boardList:SetMultiSelect(false)
 
+	self.Header = vgui.Create("TeamScoreboardHeader",self)
 end
 
-function PANEL:Setup( iTeam, pMainScoreboard )
-
+function TeamScoreboard:Setup(iTeam,pMainScoreboard)
 	self.iTeam = iTeam
 	self.pMain = pMainScoreboard
-	
-	self.Header:Setup( iTeam, pMainScoreboard )
-
+	self.Header:Setup(iTeam,pMainScoreboard)
 end
 
-function PANEL:SizeToContents()
+function TeamScoreboard:SizeToContents()
+	local boardList = self.List
 
-	self.List:SizeToContents()
-	local tall = self.List:GetTall()
-	
-	self:SetTall( tall + self.Header:GetTall() )
-
+	boardList:SizeToContents()
+	self:SetTall(boardList:GetTall() + self.Header:GetTall())
 end
 
-function PANEL:PerformLayout()
+function TeamScoreboard:PerformLayout()
+	local main,header,boardList = self.pMain,self.Header,self.List
 
-	if ( self.pMain:GetShowScoreboardHeaders() ) then
-
-		self.Header:SetPos( 0, 0 )
-		self.Header:CopyWidth( self )
-
+	if main:GetShowScoreboardHeaders() then
+		header:SetPos(0,0)
+		header:CopyWidth(self)
 	else
-	
-		self.Header:SetTall( 0 )
-		self.Header:SetVisible( false )
-		
+		header:SetTall(0)
+		header:SetVisible(false)
 	end
-	
+
 	self:SizeToContents()
-	self.List:StretchToParent( 0, self.Header:GetTall(), 0, 0 )
-	self.List:SetDataHeight( self.pMain:GetRowHeight() )
-	self.List:SetHeaderHeight( 16 )
-
+	boardList:StretchToParent(0,header:GetTall(),0,0)
+	boardList:SetDataHeight(main:GetRowHeight())
+	boardList:SetHeaderHeight(16)
 end
 
-function PANEL:AddColumn( col )
+function TeamScoreboard:AddColumn(col)
+	local columns = self.Columns
+	columns[#columns + 1] = col
 
-	table.insert( self.Columns, col )
-	
-	local pnlCol = self.List:AddColumn( col.Name )
-	
-	if (col.iFixedSize) then pnlCol:SetMinWidth( col.iFixedSize ) pnlCol:SetMaxWidth( col.iFixedSize ) end
-	if (col.HeaderAlign) then 
-		pnlCol.Header:SetContentAlignment( col.HeaderAlign ) 
+	local pnlCol = self.List:AddColumn(col.Name)
+	if col.iFixedSize then
+		pnlCol:SetMinWidth(col.iFixedSize)
+		pnlCol:SetMaxWidth(col.iFixedSize)
 	end
 
-	Derma_Hook( pnlCol, 	"Paint", 				"Paint", 	"ScorePanelHeader" )
-	
-	pnlCol.cTeamColor = team.GetColor( self.iTeam )
-	
-	Derma_Hook( pnlCol.Header, 	"Paint", 				"Paint", 	"ScorePanelHeaderLabel" )
-	Derma_Hook( pnlCol.Header, 	"ApplySchemeSettings", 	"Scheme", 	"ScorePanelHeaderLabel" )
-	Derma_Hook( pnlCol.Header, 	"PerformLayout", 		"Layout", 	"ScorePanelHeaderLabel" )
-	
-	pnlCol.Header:ApplySchemeSettings()
+	local header = pnlCol.Header
+	if col.HeaderAlign then
+		header:SetContentAlignment(col.HeaderAlign)
+	end
 
+	Derma_Hook(pnlCol,"Paint","Paint","ScorePanelHeader")
+	pnlCol.cTeamColor = team.GetColor(self.iTeam)
+
+	Derma_Hook(header,"Paint","Paint","ScorePanelHeaderLabel")
+	Derma_Hook(header,"ApplySchemeSettings","Scheme","ScorePanelHeaderLabel")
+	Derma_Hook(header,"PerformLayout","Layout","ScorePanelHeaderLabel")
+	header:ApplySchemeSettings()
 end
 
-function PANEL:SetSortColumns( ... )
-	
+function TeamScoreboard:SetSortColumns(...)
 	self.SortArgs = ...
-	
 end
 
-local function LinePressed(self, mcode)
-	if mcode == MOUSE_LEFT and IsValid(self.pPlayer) then
-		gamemode.Call("ScoreboardPlayerPressed", self.pPlayer)
-	end
+local function LinePressed(self,mcode)
+	if not (mcode == MOUSE_LEFT and IsValid(self.pPlayer)) then return end
+
+	gamemode.Call("ScoreboardPlayerPressed",self.pPlayer)
 end
-function PANEL:FindPlayerLine( ply )
 
-	for _, line in pairs( self.List.Lines ) do
-		if ( line.pPlayer == ply ) then return line end
+function TeamScoreboard:FindPlayerLine(ply)
+	local boardList = self.List
+
+	for _,line in pairs(boardList.Lines) do
+		if line.pPlayer ~= ply then continue end
+
+		return line
 	end
-	
-	local line = self.List:AddLine()
-	line.pPlayer = ply
-	line.UpdateTime = {}
 
-	line.OnMousePressed = LinePressed
-	
-	Derma_Hook( line, 	"Paint", 				"Paint", 	"ScorePanelLine" )
-	Derma_Hook( line, 	"ApplySchemeSettings", 	"Scheme", 	"ScorePanelLine" )
-	Derma_Hook( line, 	"PerformLayout", 		"Layout", 	"ScorePanelLine" )
-	
+	local newLine = boardList:AddLine()
+	newLine.pPlayer = ply
+	newLine.UpdateTime = {}
+	newLine.OnMousePressed = LinePressed
+	Derma_Hook(newLine,"Paint","Paint","ScorePanelLine")
+	Derma_Hook(newLine,"ApplySchemeSettings","Scheme","ScorePanelLine")
+	Derma_Hook(newLine,"PerformLayout","Layout","ScorePanelLine")
+
 	self.pMain:InvalidateLayout()
-	
-	return line
 
+	return newLine
 end
 
-function PANEL:UpdateColumn( i, col, pLine )
+function TeamScoreboard:UpdateColumn(idx,col,pLine)
+	if not col.fncValue then return end
 
-	if ( !col.fncValue ) then return end
-	
-	pLine.UpdateTime[i] = pLine.UpdateTime[i] or 0
-	if ( col.UpdateRate == 0 && pLine.UpdateTime[i] != 0 ) then return end // 0 = only update once
-	if ( pLine.UpdateTime[i] > RealTime() ) then return end
-	
-	pLine.UpdateTime[i] = RealTime() + col.UpdateRate
-	
-	local Value = col.fncValue( pLine.pPlayer )
-	if ( Value == nil ) then return end
-	
-	local lbl = pLine:SetColumnText( i, Value )
-	if ( IsValid( lbl ) && !lbl.bScorePanelHooks ) then
-	
-		lbl.bScorePanelHooks = true
-		
-		if ( col.ValueAlign ) then lbl:SetContentAlignment( col.ValueAlign ) end
-		if ( col.Font ) then lbl:SetFont( col.Font ) end
-		
-		lbl.pPlayer = pLine.pPlayer
-	
-		Derma_Hook( lbl, 	"Paint", 				"Paint", 	"ScorePanelLabel" )
-		Derma_Hook( lbl, 	"ApplySchemeSettings", 	"Scheme", 	"ScorePanelLabel" )
-		Derma_Hook( lbl, 	"PerformLayout", 		"Layout", 	"ScorePanelLabel" )
-	
+	local updateTime,realTime = pLine.UpdateTime[idx],RealTime()
+	pLine.UpdateTime[idx] = updateTime[idx] or 0
+
+	-- 0 = only update once
+	if
+		(
+			col.UpdateRate == 0
+		and	updateTime[idx] ~= 0
+	)
+	or	updateTime[idx] > realTime
+	then return end
+
+	pLine.UpdateTime[idx] = realTime + col.UpdateRate
+
+	local value = col.fncValue(pLine.pPlayer)
+	if value == nil then return end
+
+	local lbl = pLine:SetColumnText(idx,value)
+	if not IsValid(lbl) or lbl.bScorePanelHooks then return end
+
+	lbl.bScorePanelHooks = true
+
+	if col.ValueAlign then
+		lbl:SetContentAlignment(col.ValueAlign)
 	end
 
-	
-end
-
-function PANEL:UpdateLine( pLine )
-
-	for i, col in pairs( self.Columns ) do
-		self:UpdateColumn( i, col, pLine )
+	if col.Font then
+		lbl:SetFont(col.Font)
 	end
-	
+
+	lbl.pPlayer = pLine.pPlayer
+	Derma_Hook(lbl,"Paint","Paint","ScorePanelLabel")
+	Derma_Hook(lbl,"ApplySchemeSettings","Scheme","ScorePanelLabel")
+	Derma_Hook(lbl,"PerformLayout","Layout","ScorePanelLabel")
 end
 
-function PANEL:CleanLines( pLine )
-
-	for k, line in pairs( self.List.Lines ) do
-	
-		if ( !IsValid( line.pPlayer ) || line.pPlayer:Team() != self.iTeam ) then 
-			self.List:RemoveLine( k ) 
-		end
-		
+function TeamScoreboard:UpdateLine(pLine)
+	for idx,col in ipairs(self.Columns) do
+		self:UpdateColumn(idx,col,pLine)
 	end
-	
 end
 
-function PANEL:Think()
+function TeamScoreboard:CleanLines()
+	local boardList = self.List
 
+	for idx,line in pairs(boardList.Lines) do
+		local ply = line.pPlayer
+
+		if
+			not IsValid(ply)
+		or	ply:Team() == self.iTeam
+		then continue end
+
+		boardList:RemoveLine(idx)
+	end
+end
+
+function TeamScoreboard:Think()
 	self:CleanLines()
-	
-	local players = team.GetPlayers( self.iTeam )
-	for _, player in pairs( players ) do
-		
-		local line = self:FindPlayerLine( player )
-		self:UpdateLine( line )
-		
-	end
-	
-	if ( self.SortArgs ) then
-		self.List:SortByColumns( unpack(self.SortArgs) )
+
+	for _,ply in ipairs(team.GetPlayers(self.iTeam)) do
+		self:UpdateLine(self:FindPlayerLine(ply))
 	end
 
+	if not self.SortArgs then return end
+	self.List:SortByColumns(unpack(self.SortArgs))
 end
 
-derma.DefineControl( "TeamScoreboard", "", PANEL, "Panel" )
+derma.DefineControl("TeamScoreboard","",TeamScoreboard,"Panel")

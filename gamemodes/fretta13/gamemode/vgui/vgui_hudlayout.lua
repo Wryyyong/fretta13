@@ -1,161 +1,163 @@
-local PANEL = {}
+local HudLayout = {}
+AccessorFunc(HudLayout,"Spacing","Spacing")
 
-AccessorFunc( PANEL, "Spacing", 	"Spacing" )
-
-/*---------------------------------------------------------
-   Name: Init
----------------------------------------------------------*/
-function PANEL:Init()
-
+function HudLayout:Init()
 	self.Items = {}
-
-	self:SetSpacing( 8 )
-	
-	self:SetPaintBackgroundEnabled( false )
-	self:SetPaintBorderEnabled( false )
-	
-	self:ParentToHUD()
-
-end
-
-// This makes it so that it's behind chat & hides when you're in the menu
-// But it also removes the ability to click on it. So override it if you want to.
-function PANEL:ChooseParent()
+	self:SetSpacing(8)
+	self:SetPaintBackgroundEnabled(false)
+	self:SetPaintBorderEnabled(false)
 	self:ParentToHUD()
 end
 
-/*---------------------------------------------------------
-   Name: GetCanvas
----------------------------------------------------------*/
-function PANEL:Clear( bDelete )
+-- This makes it so that it's behind chat & hides when you're in the menu
+-- But it also removes the ability to click on it. So override it if you want to.
+function HudLayout:ChooseParent()
+	self:ParentToHUD()
+end
 
-	for k, panel in pairs( self.Items ) do
-	
-		if ( panel && panel:IsValid() ) then
-		
-			panel:SetParent( panel )
-			panel:SetVisible( false )
-		
-			if ( bDelete ) then
-				panel:Remove()
-			end
-			
-		end
-		
+function HudLayout:Clear(bDelete)
+	local items = self.Items
+
+	for idx,panel in ipairs(items) do
+		if not (panel and panel:IsValid()) then continue end
+
+		panel:SetParent(panel)
+		panel:SetVisible(false)
+
+		if not bDelete then continue end
+		panel:Remove()
+		items[idx] = nil
 	end
-	
-	self.Items = {}
-
 end
 
-/*---------------------------------------------------------
-   Name: AddItem
----------------------------------------------------------*/
-function PANEL:AddItem( item, relative, pos )
-
-	if (!item || !item:IsValid()) then return end
+function HudLayout:AddItem(item,relative,pos)
+	if not (item and item:IsValid()) then return end
 
 	item.HUDPos = pos
-	item.HUDrelative = relative
-	
-	item:SetVisible( true )
-	item:SetParent( self )
-	table.insert( self.Items, item )
-	
-	self:InvalidateLayout()
+	relative = relative
+	item:SetVisible(true)
+	item:SetParent(self)
 
+	local items = self.Items
+	items[#items + 1] = item
+
+	self:InvalidateLayout()
 end
 
-function PANEL:PositionItem( item )
+function HudLayout:PositionItem(item)
+	if item.Positioned then return end
 
-	if ( item.Positioned ) then return end
-	if ( IsValid( item.HUDrelative ) && item != item.HUDrelative ) then self:PositionItem( item.HUDrelative ) end
-	
-	local SPACING = self:GetSpacing()
-	
-	item:InvalidateLayout( true )
+	local relative = item.HUDrelative
+	local relativeIsValid = IsValid(relative)
 
-	if ( item.HUDPos == 7 || item.HUDPos == 8 || item.HUDPos == 9 ) then
-		if ( IsValid( item.HUDrelative ) ) then
-			item:MoveAbove( item.HUDrelative, SPACING )
+	if relativeIsValid and item ~= relative then
+		self:PositionItem(relative)
+	end
+
+	local spacing,pos = self:GetSpacing(),item.HUDPos
+	item:InvalidateLayout(true)
+
+	if
+		pos == 9
+	or	pos == 8
+	or	pos == 7
+	then
+		if relativeIsValid then
+			item:MoveAbove(relative,spacing)
 		else
 			item:AlignTop()
 		end
 	end
-	
-	if ( item.HUDPos == 4 || item.HUDPos == 5 || item.HUDPos == 6 ) then
-		if ( IsValid( item.HUDrelative ) ) then
-			item.y = item.HUDrelative.y
+
+	if
+		pos == 6
+	or	pos == 5
+	or	pos == 4
+	then
+		if relativeIsValid then
+			item.y = relative.y
 		else
 			item:CenterVertical()
 		end
 	end
-	
-	if ( item.HUDPos == 1 || item.HUDPos == 2 || item.HUDPos == 3 ) then
-		if ( IsValid( item.HUDrelative ) ) then
-			item:MoveBelow( item.HUDrelative, SPACING )
+
+	if
+		pos == 3
+	or	pos == 2
+	or	pos == 1
+	then
+		if relativeIsValid then
+			item:MoveBelow(relative,spacing)
 		else
 			item:AlignBottom()
 		end
 	end
-	
-	if ( item.HUDPos == 7 || item.HUDPos == 4 || item.HUDPos == 1 ) then
-		if ( IsValid( item.HUDrelative ) ) then
-			item.x = item.HUDrelative.x
+
+	if
+		pos == 7
+	or	pos == 4
+	or	pos == 1
+	then
+		if relativeIsValid then
+			item.x = relative.x
 		else
 			item:AlignLeft()
 		end
 	end
-	
-	if ( item.HUDPos == 8 || item.HUDPos == 5 || item.HUDPos == 2 ) then
-		if ( IsValid( item.HUDrelative ) ) then
-			item.x = item.HUDrelative.x + ( item.HUDrelative:GetWide() - item:GetWide() ) / 2
+
+	if
+		pos == 8
+	or	pos == 5
+	or	pos == 2
+	then
+		if relativeIsValid then
+			item.x = relative.x + (relative:GetWide() - item:GetWide()) * 0.5
 		else
 			item:CenterHorizontal()
 		end
 	end
-	
-	if ( item.HUDPos == 9 || item.HUDPos == 6 || item.HUDPos == 3 ) then
-		if ( IsValid( item.HUDrelative ) ) then
-			item.x = item.HUDrelative.x + item.HUDrelative:GetWide() - item:GetWide() 
+
+	if
+		pos == 9
+	or	pos == 6
+	or	pos == 3
+	then
+		if relativeIsValid then
+			item.x = relative.x + relative:GetWide() - item:GetWide()
 		else
 			item:AlignRight()
 		end
 	end
-	
-	if ( item.HUDPos == 4 && IsValid( item.HUDrelative ) ) then
-		item:MoveLeftOf( item.HUDrelative, SPACING )
-	end
-	
-	if ( item.HUDPos == 6 && IsValid( item.HUDrelative ) ) then
-		item:MoveRightOf( item.HUDrelative, SPACING )
+
+	if relativeIsValid then
+		if pos == 4 then
+			item:MoveLeftOf(relative,spacing)
+		elseif pos == 6 then
+			item:MoveRightOf(relative,spacing)
+		end
 	end
 
 	item.Positioned = true
-	
 end
 
-function PANEL:Think()
+function HudLayout:Think()
 	self:InvalidateLayout()
 end
 
-/*---------------------------------------------------------
-   Name: PerformLayout
----------------------------------------------------------*/
-function PANEL:PerformLayout()
+function HudLayout:PerformLayout()
+	self:SetPos(32,32)
+	self:SetWide(ScrW() - 64)
+	self:SetTall(ScrH() - 64)
 
-	self:SetPos( 32, 32 )
-	self:SetWide( ScrW() - 64 )
-	self:SetTall( ScrH() - 64 )
+	local items = self.Items
 
-	for k, item in pairs( self.Items ) do
+	for _,item in ipairs(items) do
 		item.Positioned = false
 	end
-	
-	for k, item in pairs( self.Items ) do
-		self:PositionItem( item )
-	end
 
+	for _,item in ipairs(items) do
+		self:PositionItem(item)
+	end
 end
 
-derma.DefineControl( "DHudLayout", "A HUD Layout Base", PANEL, "Panel" )
+derma.DefineControl("DHudLayout","A HUD Layout Base",HudLayout,"Panel")

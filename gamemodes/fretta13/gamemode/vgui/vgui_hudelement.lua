@@ -1,39 +1,34 @@
-local PANEL = {}
+local HudElement = {}
 
-/*---------------------------------------------------------
-   Name: Init
----------------------------------------------------------*/
-function PANEL:Init()
-
+function HudElement:Init()
 end
 
-function PANEL:SetLabel( text )
-
-	self.LabelPanel = vgui.Create( "DLabel", self )
-	self.LabelPanel:SetText( text )
-	self.LabelPanel:SetTextColor( self:GetTextLabelColor() )
-	self.LabelPanel:SetFont( self:GetTextLabelFont() )
-
+function HudElement:SetLabel(text)
+	local labelPanel = vgui.Create("DLabel",self)
+	self.LabelPanel = labelPanel
+	labelPanel:SetText(text)
+	labelPanel:SetTextColor(self:GetTextLabelColor())
+	labelPanel:SetFont(self:GetTextLabelFont())
 end
 
-/*---------------------------------------------------------
-   Name: PerformLayout
----------------------------------------------------------*/
-function PANEL:PerformLayout()
+function HudElement:PerformLayout()
+	self:SetContentAlignment(5)
 
-	self:SetContentAlignment( 5 )
+	local padding = self:GetPadding()
+	local labelPanel = self.LabelPanel
 
-	if ( self.LabelPanel ) then
-		self.LabelPanel:SetPos( self:GetPadding(), self:GetPadding() )
-		self.LabelPanel:SizeToContents()
-		self.LabelPanel:SetSize( self.LabelPanel:GetWide() + self:GetPadding() * 0.5, self.LabelPanel:GetTall() + self:GetPadding() * 0.5 )
-		self:SetTextInset( self.LabelPanel:GetWide() + self:GetPadding(), 0 )
-		self:SetContentAlignment( 4 )
+	if labelPanel then
+		local wide = labelPanel:GetWide()
+
+		labelPanel:SetPos(padding,padding)
+		labelPanel:SizeToContents()
+		labelPanel:SetSize(wide + padding * 0.5,labelPanel:GetTall() + padding * 0.5)
+		self:SetTextInset(wide + padding,0)
+		self:SetContentAlignment(4)
 	end
 
-	self:SizeToContents( )
-	self:SetSize( self:GetWide() + self:GetPadding(), self:GetTall() + self:GetPadding() )
-	
+	self:SizeToContents()
+	self:SetSize(self:GetWide() + padding,self:GetTall() + padding)
 end
 
-derma.DefineControl( "DHudElement", "A HUD Element", PANEL, "HudBase" )
+derma.DefineControl("DHudElement","A HUD Element",HudElement,"HudBase")

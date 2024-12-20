@@ -1,241 +1,241 @@
-
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:GetValidSpectatorModes( Player ply )
    Desc: Gets a table of the allowed spectator modes (OBS_MODE_INEYE, etc)
 		 Player is the player object of the spectator
----------------------------------------------------------*/
-function GM:GetValidSpectatorModes( ply )
-
-	// Note: Override this and return valid modes per player/team
-
-	return GAMEMODE.ValidSpectatorModes
-
+---------------------------------------------------------]]--
+function GM:GetValidSpectatorModes()
+	-- Note: Override this and return valid modes per player/team
+	return self.ValidSpectatorModes
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:GetValidSpectatorEntityNames( Player ply )
    Desc: Returns a table of entities that can be spectated (player etc)
----------------------------------------------------------*/
-function GM:GetValidSpectatorEntityNames( ply )
-
-	// Note: Override this and return valid entity names per player/team
-
-	return GAMEMODE.ValidSpectatorEntities
-
+---------------------------------------------------------]]--
+function GM:GetValidSpectatorEntityNames()
+	-- Note: Override this and return valid entity names per player/team
+	return self.ValidSpectatorEntities
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:IsValidSpectator( Player ply )
    Desc: Is our player spectating - and valid?
----------------------------------------------------------*/
-function GM:IsValidSpectator( pl )
-
-	if ( !IsValid( pl ) ) then return false end
-	if ( pl:Team() != TEAM_SPECTATOR && !pl:IsObserver() ) then return false end
-	
-	return true
-
+---------------------------------------------------------]]--
+function GM:IsValidSpectator(ply)
+	return
+		IsValid(ply)
+	and	(
+			ply:Team() == TEAM_SPECTATOR
+		or	ply:IsObserver()
+	)
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:IsValidSpectatorTarget( Player pl, Entity ent )
    Desc: Checks to make sure a spectated entity is valid.
 		 By default, you can change GM.CanOnlySpectate own team if you want to
 		 prevent players from spectating the other team.
----------------------------------------------------------*/
-function GM:IsValidSpectatorTarget( pl, ent )
+---------------------------------------------------------]]--
+function GM:IsValidSpectatorTarget(ply,ent)
+	local plyTeam = ply:Team()
 
-	if ( !IsValid( ent ) ) then return false end
-	if ( ent == pl ) then return false end
-	if ( !table.HasValue( GAMEMODE:GetValidSpectatorEntityNames( pl ), ent:GetClass() ) ) then return false end
-	if ( ent:IsPlayer() && !ent:Alive() ) then return false end
-	if ( ent:IsPlayer() && ent:IsObserver() ) then return false end
-	if ( pl:Team() != TEAM_SPECTATOR && ent:IsPlayer() && GAMEMODE.CanOnlySpectateOwnTeam && pl:Team() != ent:Team() ) then return false end
-	
-	return true
-
+	return
+		IsValid(ent)
+	and	ent ~= ply
+	and	table.HasValue(self:GetValidSpectatorEntityNames(ply),ent:GetClass())
+	and	not (
+			ent:IsPlayer()
+		and	(
+				not ent:Alive()
+			or	ent:IsObserver()
+			or	(
+					plyTeam ~= TEAM_SPECTATOR
+				and	self.CanOnlySpectateOwnTeam
+				and	plyTeam ~= ent:Team()
+			)
+		)
+	)
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:GetSpectatorTargets( Player pl )
    Desc: Returns a table of entities the player can spectate.
----------------------------------------------------------*/
-function GM:GetSpectatorTargets( pl )
+---------------------------------------------------------]]--
+function GM:GetSpectatorTargets(ply)
+	local entTable = {}
 
-	local t = {}
-	for k, v in pairs( GAMEMODE:GetValidSpectatorEntityNames( pl ) ) do
-		t = table.Merge( t, ents.FindByClass( v ) )
+	for _,ent in ipairs(self:GetValidSpectatorEntityNames(ply)) do
+		entTable = table.Merge(entTable,ents.FindByClass(ent))
 	end
-	
-	return t
 
+	return entTable
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:FindRandomSpectatorTarget( Player pl )
    Desc: Finds a random player/ent we can spectate.
 		 This is called when a player is first put in spectate.
----------------------------------------------------------*/
-function GM:FindRandomSpectatorTarget( pl )
+---------------------------------------------------------]]--
+function GM:FindRandomSpectatorTarget(ply)
+	local targets = self:GetSpectatorTargets(ply)
 
-	local Targets = GAMEMODE:GetSpectatorTargets( pl )
-	return table.Random( Targets )
-
+	return targets[math.random(#targets)]
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:FindNextSpectatorTarget( Player pl, Entity ent )
    Desc: Finds the next entity we can spectate.
 		 ent param is the current entity we are viewing.
----------------------------------------------------------*/
-function GM:FindNextSpectatorTarget( pl, ent )
+---------------------------------------------------------]]--
+function GM:FindNextSpectatorTarget(ply,ent)
+	local targets,check = self:GetSpectatorTargets(ply)
 
-	local Targets = GAMEMODE:GetSpectatorTargets( pl )
-	return table.FindNext( Targets, ent )
+	for _,target in ipairs(targets) do
+		if check then
+			return target
+		end
 
+		if ent ~= target then continue end
+		check = true
+	end
+
+	return targets[1]
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:FindPrevSpectatorTarget( Player pl, Entity ent )
    Desc: Finds the previous entity we can spectate.
 		 ent param is the current entity we are viewing.
----------------------------------------------------------*/
-function GM:FindPrevSpectatorTarget( pl, ent )
+---------------------------------------------------------]]--
+function GM:FindPrevSpectatorTarget(ply,ent)
+	local targets = self:GetSpectatorTargets(ply)
+	local last = targets[#targets]
 
-	local Targets = GAMEMODE:GetSpectatorTargets( pl )
-	return table.FindPrev( Targets, ent )
+	for _,target in ipairs(targets) do
+		if ent == target then
+			return last
+		end
 
+		last = target
+	end
+
+	return last
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:StartEntitySpectate( Player pl )
    Desc: Called when we start spectating.
----------------------------------------------------------*/
-function GM:StartEntitySpectate( pl )
+---------------------------------------------------------]]--
+function GM:StartEntitySpectate(ply)
+	local currentSpectateEntity = ply:GetObserverTarget()
 
-	local CurrentSpectateEntity = pl:GetObserverTarget()
-	
-	for i=1, 32 do
-	
-		if ( GAMEMODE:IsValidSpectatorTarget( pl, CurrentSpectateEntity ) ) then
-			pl:SpectateEntity( CurrentSpectateEntity )
+	for _ = 1,game.MaxPlayers() do
+		if self:IsValidSpectatorTarget(ply,currentSpectateEntity) then
+			ply:SpectateEntity(currentSpectateEntity)
+
 			return
 		end
-	
-		CurrentSpectateEntity = GAMEMODE:FindRandomSpectatorTarget( pl )
-	
-	end
 
+		currentSpectateEntity = self:FindRandomSpectatorTarget(ply)
+	end
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:NextEntitySpectate( Player pl )
    Desc: Called when we want to spec the next entity.
----------------------------------------------------------*/
-function GM:NextEntitySpectate( pl )
+---------------------------------------------------------]]--
+function GM:NextEntitySpectate(ply)
+	local target = ply:GetObserverTarget()
 
-	local Target = pl:GetObserverTarget()
-	
-	for i=1, 32 do
-	
-		Target = GAMEMODE:FindNextSpectatorTarget( pl, Target )	
-		
-		if ( GAMEMODE:IsValidSpectatorTarget( pl, Target ) ) then
-			pl:SpectateEntity( Target )
-			return
-		end
-	
+	for _ = 1,game.MaxPlayers() do
+		target = self:FindNextSpectatorTarget(ply,target)
+
+		if not self:IsValidSpectatorTarget(ply,target) then continue end
+		ply:SpectateEntity(target)
+
+		return
 	end
-
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:PrevEntitySpectate( Player pl )
    Desc: Called when we want to spec the previous entity.
----------------------------------------------------------*/
-function GM:PrevEntitySpectate( pl )
+---------------------------------------------------------]]--
+function GM:PrevEntitySpectate(ply)
+	local target = ply:GetObserverTarget()
 
-	local Target = pl:GetObserverTarget()
-	
-	for i=1, 32 do
-	
-		Target = GAMEMODE:FindPrevSpectatorTarget( pl, Target )	
-		
-		if ( GAMEMODE:IsValidSpectatorTarget( pl, Target ) ) then
-			pl:SpectateEntity( Target )
-			return
-		end
-	
+	for _ = 1,game.MaxPlayers() do
+		target = self:FindPrevSpectatorTarget(ply,target)
+
+		if not self:IsValidSpectatorTarget(ply,target) then continue end
+		ply:SpectateEntity(target)
+
+		return
 	end
-
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:ChangeObserverMode( Player pl, Number mode )
    Desc: Change the observer mode of a player.
----------------------------------------------------------*/
-function GM:ChangeObserverMode( pl, mode )
-
-	if ( pl:GetInfoNum( "cl_spec_mode", 0) != mode ) then
-		pl:ConCommand( "cl_spec_mode "..mode )
+---------------------------------------------------------]]--
+function GM:ChangeObserverMode(ply,mode)
+	if ply:GetInfoNum("cl_spec_mode",0) ~= mode then
+		ply:ConCommand("cl_spec_mode " .. mode)
 	end
 
-	if ( mode == OBS_MODE_IN_EYE || mode == OBS_MODE_CHASE ) then
-		GAMEMODE:StartEntitySpectate( pl, mode )
+	if
+		mode == OBS_MODE_IN_EYE
+	or	mode == OBS_MODE_CHASE
+	then
+		self:StartEntitySpectate(ply,mode)
 	end
-	
-	pl:SpectateEntity( NULL )
-	pl:Spectate( mode )
 
+	ply:SpectateEntity(NULL)
+	ply:Spectate(mode)
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Name: gamemode:BecomeObserver( Player pl )
    Desc: Called when we first become a spectator.
----------------------------------------------------------*/
-function GM:BecomeObserver( pl )
+---------------------------------------------------------]]--
+function GM:BecomeObserver(ply)
+	local mode = ply:GetInfoNum("cl_spec_mode",OBS_MODE_CHASE)
+	local validModes = self:GetValidSpectatorModes(ply)
 
-	local mode = pl:GetInfoNum( "cl_spec_mode", OBS_MODE_CHASE )
-	
-	if ( !table.HasValue( GAMEMODE:GetValidSpectatorModes( pl ), mode ) ) then 
-		mode = table.FindNext( GAMEMODE:GetValidSpectatorModes( pl ), mode )
+	if not table.HasValue(validModes,mode) then
+		mode = table.FindNext(validModes,mode)
 	end
-	
-	GAMEMODE:ChangeObserverMode( pl, mode )
 
+	self:ChangeObserverMode(ply,mode)
 end
 
-local function spec_mode( pl, cmd, args )
+concommand.Add("spec_mode",function(ply)
+	if not GAMEMODE:IsValidSpectator(ply) then return end
 
-	if ( !GAMEMODE:IsValidSpectator( pl ) ) then return end
-	
-	local mode = pl:GetObserverMode()
-	local nextmode = table.FindNext( GAMEMODE:GetValidSpectatorModes( pl ), mode )
-	
-	GAMEMODE:ChangeObserverMode( pl, nextmode )
+	local mode = ply:GetObserverMode()
+	local nextMode = table.FindNext(GAMEMODE:GetValidSpectatorModes(ply),mode)
 
-end
+	GAMEMODE:ChangeObserverMode(ply,nextMode)
+end)
 
-concommand.Add( "spec_mode",  spec_mode )
+concommand.Add("spec_next",function(ply)
+	if
+		not (
+			GAMEMODE:IsValidSpectator(ply)
+		and	table.HasValue(GAMEMODE:GetValidSpectatorModes(ply),ply:GetObserverMode())
+	)
+	then return end
 
-local function spec_next( pl, cmd, args )
+	GAMEMODE:NextEntitySpectate(ply)
+end)
 
-	if ( !GAMEMODE:IsValidSpectator( pl ) ) then return end
-	if ( !table.HasValue( GAMEMODE:GetValidSpectatorModes( pl ), pl:GetObserverMode() ) ) then return end
-	
-	GAMEMODE:NextEntitySpectate( pl )
+concommand.Add("spec_prev",function(ply)
+	if
+		not (
+			GAMEMODE:IsValidSpectator(ply)
+		and	table.HasValue(GAMEMODE:GetValidSpectatorModes(ply),ply:GetObserverMode())
+	)
+	then return end
 
-end
-
-concommand.Add( "spec_next",  spec_next )
-
-local function spec_prev( pl, cmd, args )
-
-	if ( !GAMEMODE:IsValidSpectator( pl ) ) then return end
-	if ( !table.HasValue( GAMEMODE:GetValidSpectatorModes( pl ), pl:GetObserverMode() ) ) then return end
-	
-	GAMEMODE:PrevEntitySpectate( pl )
-
-end
-
-concommand.Add( "spec_prev",  spec_prev )
+	GAMEMODE:PrevEntitySpectate(ply)
+end)

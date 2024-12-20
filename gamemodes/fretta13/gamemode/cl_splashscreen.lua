@@ -1,106 +1,134 @@
+local SplashScreen = {}
 
-local PANEL = {}
+local function PanelDoClick(panel)
+	RunConsoleCommand("seensplash")
+	panel:Remove()
+end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Init
----------------------------------------------------------*/
-function PANEL:Init()
+---------------------------------------------------------]]--
+function SplashScreen:Init()
+	self:SetText("")
+	self.DoClick = PanelDoClick
 
-	self:SetText( "" )
-	self.DoClick = function() RunConsoleCommand( "seensplash" ) self:Remove() end
-	self:SetSkin( GAMEMODE.HudSkin )
+	self:SetSkin(GAMEMODE.HudSkin)
 
-	self.lblGamemodeName = vgui.Create( "DLabel", self )
-		self.lblGamemodeName:SetText( GAMEMODE.Name )
-		self.lblGamemodeName:SetFont( "FRETTA_LARGE" )
-		self.lblGamemodeName:SetColor( color_white )
-		
-	self.lblGamemodeAuthor = vgui.Create( "DLabel", self )
-		self.lblGamemodeAuthor:SetText( "by " .. GAMEMODE.Author )
-		self.lblGamemodeAuthor:SetFont( "FRETTA_MEDIUM" )
-		self.lblGamemodeAuthor:SetColor( color_white )
-		
-	self.lblServerName = vgui.Create( "DLabel", self )
-		self.lblServerName:SetText( GetHostName() )
-		self.lblServerName:SetFont( "FRETTA_MEDIUM" )
-		self.lblServerName:SetColor( color_white )
-		
-	self.lblIP = vgui.Create( "DLabel", self )
-		self.lblIP:SetText( "0.0.0.0" )
-		self.lblIP:SetFont( "FRETTA_MEDIUM" )
-		self.lblIP:SetColor( color_white )
-		
-	
+	local lblGamemodeName = vgui.Create("DLabel",self)
+	self.lblGamemodeName = lblGamemodeName
+	lblGamemodeName:SetText(GAMEMODE.Name)
+	lblGamemodeName:SetFont("FRETTA_LARGE")
+	lblGamemodeName:SetColor(color_white)
+
+	local lblGamemodeAuthor = vgui.Create("DLabel",self)
+	self.lblGamemodeAuthor = lblGamemodeAuthor
+	lblGamemodeAuthor:SetText("by " .. GAMEMODE.Author)
+	lblGamemodeAuthor:SetFont("FRETTA_MEDIUM")
+	lblGamemodeAuthor:SetColor(color_white)
+
+	local lblServerName = vgui.Create("DLabel",self)
+	self.lblServerName = lblServerName
+	lblServerName:SetText(GetHostName())
+	lblServerName:SetFont("FRETTA_MEDIUM")
+	lblServerName:SetColor(color_white)
+
+	local lblIP = vgui.Create("DLabel",self)
+	self.lblIP = lblIP
+	lblIP:SetText("0.0.0.0")
+	lblIP:SetFont("FRETTA_MEDIUM")
+	lblIP:SetColor(color_white)
+
 	self:PerformLayout()
-	
 	self.FadeInTime = RealTime()
-	
 end
 
-/*---------------------------------------------------------
+local cvIP = GetConVar("ip")
+
+--[[---------------------------------------------------------
    PerformLayout
----------------------------------------------------------*/
-function PANEL:PerformLayout()
+---------------------------------------------------------]]--
+function SplashScreen:PerformLayout()
+	local lblGamemodeName = self.lblGamemodeName
+	local lblGamemodeAuthor = self.lblGamemodeAuthor
+	local lblServerName = self.lblServerName
+	local lblIP = self.lblIP
 
-	self:SetSize( ScrW(), ScrH() )
-	
-	local CenterY = ScrH() / 2.0
-	
-	self.lblGamemodeName:SizeToContents()
-	self.lblGamemodeName:SetPos( ScrW()/2 - self.lblGamemodeName:GetWide()/2, CenterY - 200 - self.lblGamemodeName:GetTall() - self.lblGamemodeAuthor:GetTall() )
-	
-	self.lblGamemodeAuthor:SizeToContents()
-	self.lblGamemodeAuthor:SetPos( ScrW()/2 - self.lblGamemodeAuthor:GetWide()/2, CenterY - 200 - self.lblGamemodeAuthor:GetTall() )
-	
-	self.lblServerName:SizeToContents()
-	self.lblServerName:SetPos( 100, CenterY + 200 )
-	
-	self.lblIP:SetText( GetConVarString( "ip" )  )
-	self.lblIP:SizeToContents()
-	self.lblIP:SetPos( self:GetWide() - 100 - self.lblIP:GetWide(), CenterY + 200 )
-	
+	local scrW,scrH = ScrW(),ScrH()
+	local centerX = scrW * 0.5
+	local centerY = scrH * 0.5
+	local lblGamemodeAuthorTall = lblGamemodeAuthor:GetTall()
+
+	self:SetSize(scrW,scrH)
+
+	lblGamemodeName:SizeToContents()
+	lblGamemodeName:SetPos(
+		centerX - lblGamemodeName:GetWide() * 0.5,
+		centerY - 200 - lblGamemodeName:GetTall() - lblGamemodeAuthorTall
+	)
+
+	lblGamemodeAuthor:SizeToContents()
+	lblGamemodeAuthor:SetPos(
+		centerX - lblGamemodeAuthor:GetWide() * 0.5,
+		centerY - 200 - lblGamemodeAuthorTall
+	)
+
+	lblServerName:SizeToContents()
+	lblServerName:SetPos(
+		100,
+		centerY + 200
+	)
+
+	lblIP:SetText(cvIP:GetString())
+	lblIP:SizeToContents()
+	lblIP:SetPos(
+		self:GetWide() - 100 - lblIP:GetWide(),
+		centerY + 200
+	)
 end
 
-/*---------------------------------------------------------
+--[[---------------------------------------------------------
    Paint
----------------------------------------------------------*/
-function PANEL:Paint()
+---------------------------------------------------------]]--
+function SplashScreen:Paint()
+	local centerY = ScrH() * 0.5
+	local wide,tall = self:GetWide(),self:GetTall()
+	local fadeTime = RealTime() - self.FadeInTime
 
-	Derma_DrawBackgroundBlur( self )
-	
-	local Fade = RealTime() - self.FadeInTime
-	if ( Fade < 3 ) then
-	
-		Fade = 1- (Fade / 3);
-		surface.SetDrawColor( 0,0, 0, Fade * 255 );
-		surface.DrawRect( 0, 0, self:GetWide(), self:GetTall() );
-	
+	Derma_DrawBackgroundBlur(self)
+
+	if fadeTime < 3 then
+		fadeTime = 1 - fadeTime / 3
+
+		surface.SetDrawColor(0,0,0,fadeTime * 255)
+		surface.DrawRect(0,0,wide,tall)
 	end
-	
-	
-	local CenterY = ScrH() / 2.0
-	
-	surface.SetDrawColor( 0, 0, 0, 200 );
-	surface.DrawRect( 0, 0, self:GetWide(), CenterY - 180 );
-	
-	surface.DrawRect( 0, CenterY + 180, self:GetWide(), self:GetTall() - ( CenterY+ 180 ) );
-	
-	GAMEMODE:PaintSplashScreen( self:GetWide(), self:GetTall() )
 
+	surface.SetDrawColor(0,0,0,200)
+	surface.DrawRect(
+		0,
+		0,
+		wide,
+		centerY - 180
+	)
+
+	local centerYBump = centerY + 180
+	surface.DrawRect(
+		0,
+		centerYBump,
+		wide,
+		tall - centerYBump
+	)
+
+	GAMEMODE:PaintSplashScreen(wide,tall)
 end
 
-local vgui_Splash = vgui.RegisterTable( PANEL, "DButton" )
+vgui_Splash = vgui.RegisterTable(SplashScreen,"DButton")
 
 function GM:ShowSplash()
-
-	local pnl = vgui.CreateFromTable( vgui_Splash )
+	local pnl = vgui.CreateFromTable(vgui_Splash)
 	pnl:MakePopup()
-
 end
 
-
-function GM:PaintSplashScreen( w, h )
-
-	// Customised splashscreen render here ( The center bit! )
-
+-- Customised splashscreen render here (The center bit!)
+function GM:PaintSplashScreen()
 end

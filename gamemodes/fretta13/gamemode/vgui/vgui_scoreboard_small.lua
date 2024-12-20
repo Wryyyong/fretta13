@@ -1,66 +1,56 @@
-local PANEL = {}
+local TeamBoardSmall = {}
+Derma_Hook(TeamBoardSmall,"Paint","Paint","SpectatorInfo")
+Derma_Hook(TeamBoardSmall,"ApplySchemeSettings","Scheme","SpectatorInfo")
+Derma_Hook(TeamBoardSmall,"PerformLayout","Layout","SpectatorInfo")
 
-Derma_Hook( PANEL, 	"Paint", 				"Paint", 	"SpectatorInfo" )
-Derma_Hook( PANEL, 	"ApplySchemeSettings", 	"Scheme", 	"SpectatorInfo" )
-Derma_Hook( PANEL, 	"PerformLayout", 		"Layout", 	"SpectatorInfo" )
-
-function PANEL:Init()
-
+function TeamBoardSmall:Init()
 	self.LastThink = 0
-
 end
 
-function PANEL:Setup( iTeam, pMainScoreboard )
+function TeamBoardSmall:Setup(iTeam)
 	self.iTeam = iTeam
 end
 
-function PANEL:GetPlayers()
-	return team.GetPlayers( self.iTeam )
+function TeamBoardSmall:GetPlayers()
+	return team.GetPlayers(self.iTeam)
 end
 
-function PANEL:ShouldShow()
-	
-	local players = team.GetPlayers( self.iTeam )
-	if ( !players || #players == 0 ) then 
-		return false
-	end
-	
-	return true
-	
+function TeamBoardSmall:ShouldShow()
+	local players = team.GetPlayers(self.iTeam)
+
+	return players and #players > 0
 end
 
-function PANEL:UpdateText( NewText )
+function TeamBoardSmall:UpdateText(newText)
+	if self:GetValue() == newText then return end
 
-	local OldText = self:GetValue()
-	if ( OldText == NewText ) then return end
-	
-	self:SetText( NewText )
+	self:SetText(newText)
 	self:SizeToContents()
 	self:InvalidateLayout()
 	self:GetParent():InvalidateLayout()
-
 end
 
-function PANEL:Think()
+function TeamBoardSmall:Think()
+	local realTime = RealTime()
+	if self.LastThink > realTime then return end
 
-	if ( self.LastThink > RealTime() ) then return end
-	self.LastThink = RealTime() + 1
-	
-	local players = team.GetPlayers( self.iTeam )
-	if ( !players || #players == 0 ) then 
-		self:UpdateText( "" ) 
-		return 
+	self.LastThink = realTime + 1
+	local players = team.GetPlayers(self.iTeam)
+
+	if not players or #players == 0 then
+		self:UpdateText("")
+
+		return
 	end
-	
-	local Str = team.GetName( self.iTeam ) .. ": "
-		
-	for k, v in pairs( players ) do
-		Str = Str .. v:Name() .. ", "
+
+	local str = team.GetName(self.iTeam) .. ": "
+
+	for _,ply in ipairs(players) do
+		str = str .. ply:Name() .. ", "
 	end
-	
-	Str = Str:sub( 0, -3 )
-	self:UpdateText( Str ) 
-	
+
+	str = str:sub(0,-3)
+	self:UpdateText(str)
 end
 
-derma.DefineControl( "TeamBoardSmall", "", PANEL, "DLabel" )
+derma.DefineControl("TeamBoardSmall","",TeamBoardSmall,"DLabel")

@@ -3,367 +3,348 @@
 	-----------------------------------------------------
 	Most of the internal stuff for the votes is here and contains stuff you really don't
 	want to override.
-]]
+--]]
 
-local g_PlayableGamemodes = {}
+g_PlayableGamemodes = g_PlayableGamemodes or {}
 
-fretta_votesneeded = CreateConVar( "fretta_votesneeded", "0.75", { FCVAR_ARCHIVE } )
-fretta_votetime = CreateConVar( "fretta_votetime", "20", { FCVAR_ARCHIVE } )
-fretta_votegraceperiod = CreateConVar( "fretta_votegraceperiod", "30", { FCVAR_ARCHIVE } )
+fretta_votesneeded = CreateConVar("fretta_votesneeded",0.75,FCVAR_ARCHIVE)
+fretta_votetime = CreateConVar("fretta_votetime",20,FCVAR_ARCHIVE)
+fretta_votegraceperiod = CreateConVar("fretta_votegraceperiod",30,FCVAR_ARCHIVE)
 
-
-local function SendAvailableGamemodes( ply )
-
+local function SendAvailableGamemodes(ply)
 	net.Start("PlayableGamemodes")
 		net.WriteTable(g_PlayableGamemodes)
 	net.Send(ply)
-	
 end
 
 function GetRandomGamemodeName()
-	local choose = table.Random( g_PlayableGamemodes )
-	if choose then return choose.key end
+	local choose = g_PlayableGamemodes[math.random(#g_PlayableGamemodes)]
 
-	return GAMEMODE.FolderName
+	return choose and choose.key or GAMEMODE.FolderName
 end
 
-function GetRandomGamemodeMap( gm )
-	local gmtab = g_PlayableGamemodes[ gm or GAMEMODE.FolderName ]
-	if gmtab then
-		return table.Random( gmtab.maps )
-	end
+function GetRandomGamemodeMap(gm)
+	local gmTab = g_PlayableGamemodes[gm or GAMEMODE.FolderName]
 
-	return game.GetMap()
+	return gmTab and gmTab.maps[math.random(#gmTab.maps)] or game.GetMap()
 end
 
-function GetNumberOfGamemodeMaps( gm )
-	local gmtab = g_PlayableGamemodes[ gm or GAMEMODE.FolderName ]
-	if gmtab then
-		return table.Count( gmtab.maps )
-	end
+function GetNumberOfGamemodeMaps(gm)
+	local gmTab = g_PlayableGamemodes[gm or GAMEMODE.FolderName]
 
-	return 0
+	return gmTab and table.Count(gmTab.maps) or 0
 end
 
-hook.Add( "PlayerInitialSpawn", "SendAvailableGamemodes", SendAvailableGamemodes ) 
+hook.Add("PlayerInitialSpawn","SendAvailableGamemodes",SendAvailableGamemodes)
 
-
-local AllMaps = file.Find( "maps/*.bsp", "GAME" )
-for key, map in pairs( AllMaps ) do
-	AllMaps[ key ] = string.gsub( map, ".bsp", "" )
+local AllMaps = {}
+for key,map in ipairs(file.Find("maps/*.bsp","GAME")) do
+	AllMaps[key] = string.gsub(map,".bsp","")
 end
 
-local GameModes = engine.GetGamemodes()
+for _,gm in ipairs(engine.GetGamemodes()) do
+	local info = file.Read("gamemodes/" .. gm.name .. "/" .. gm.name .. ".txt","GAME")
+	if not info then continue end
 
-for _, gm in pairs( engine.GetGamemodes() ) do
+	local keyValues = util.KeyValuesToTable(info)
+	if keyValues.selectable ~= 1 then continue end
 
-	local info = file.Read( "gamemodes/"..gm.name.."/"..gm.name..".txt", "GAME" )
-	if ( info ) then
-	
-		local info = util.KeyValuesToTable( info )
-		
-		if ( info.selectable == 1 ) then
-		
-			g_PlayableGamemodes[ gm.name ] = {}
-			g_PlayableGamemodes[ gm.name ].key = gm.name
-			g_PlayableGamemodes[ gm.name ].name = gm.title
-			g_PlayableGamemodes[ gm.name ].label = info.title
-			g_PlayableGamemodes[ gm.name ].description = info.description
-			g_PlayableGamemodes[ gm.name ].author = info.author_name
-			g_PlayableGamemodes[ gm.name ].authorurl = info.author_url
-			
-			g_PlayableGamemodes[ gm.name ].maps = {}
-		
-			if ( info.fretta_maps ) then
-				for _, mapname in pairs( AllMaps ) do
-					mapname = string.lower(mapname)
-					for _, p in pairs( info.fretta_maps ) do
-						if ( string.sub( mapname, 1, #p ) == p ) then
-							table.insert( g_PlayableGamemodes[ gm.name ].maps, mapname )
-						end
-					end
-				end
-			else
-				g_PlayableGamemodes[ gm.name ].maps = AllMaps
+	g_PlayableGamemodes[gm.name] = {
+		["key"] = gm.name,
+		["name"] = gm.title,
+		["label"] = keyValues.title,
+		["description"] = keyValues.description,
+		["author"] = keyValues.author_name,
+		["authorurl"] = keyValues.author_url,
+		["maps"] = {},
+	}
+	local gmTbl = g_PlayableGamemodes[gm.name]
+
+	if keyValues.fretta_maps then
+		for _,mapName in ipairs(AllMaps) do
+			local mapNameLower = string.lower(mapName)
+
+			for _,map in ipairs(keyValues.fretta_maps) do
+				if mapNameLower ~= map then continue end
+
+				gmTbl.maps[#gmTbl.maps + 1] = mapNameLower
 			end
-			
-			if ( info.fretta_maps_disallow ) then
-				for key, mapname in pairs( g_PlayableGamemodes[ gm.name ].maps ) do
-					mapname = string.lower(mapname)
-					for _, p in pairs( info.fretta_maps_disallow ) do
-						if ( string.sub( mapname, 1, #p ) == p ) then
-							g_PlayableGamemodes[ gm.name ].maps[ key ] = nil
-						end
-					end
-				end
-			end
-
 		end
-		
+	else
+		gmTbl.maps = AllMaps
 	end
-	
+
+	if keyValues.fretta_maps_disallow then
+		for idx,mapName in ipairs(gmTbl.maps) do
+			for _,map in ipairs(keyValues.fretta_maps_disallow) do
+				if string.lower(mapName) ~= map then continue end
+
+				gmTbl.maps[idx] = nil
+			end
+		end
+	end
 end
 
-GameModes = nil
-
-function GM:IsValidGamemode( gamemode, map )
-
-	if ( g_PlayableGamemodes[ gamemode ] == nil ) then return false end
-	
-	if ( map == nil ) then return true end
-	
-	for _, mapname in pairs( g_PlayableGamemodes[ gamemode ].maps ) do
-		if ( mapname == map ) then return true end
+function GM:IsValidGamemode(gm,map)
+	if g_PlayableGamemodes[gm] == nil then
+		return false
 	end
-	
+
+	if map == nil then
+		return true
+	end
+
+	for _,mapName in ipairs(g_PlayableGamemodes[gm].maps) do
+		if mapName ~= map then continue end
+
+		return true
+	end
+
 	return false
-	
 end
 
-local gVotes = {}
+function GM:VotePlayGamemode(ply,gm)
+	if
+		not gm
+	or	self.WinningGamemode
+	or	not self:InGamemodeVote()
+	or	not self:IsValidGamemode(gm)
+	then return end
 
-function GM:VotePlayGamemode( ply, gamemode )
-	
-	if ( !gamemode ) then return end
-	if ( GAMEMODE.WinningGamemode ) then return end
-	if ( !GAMEMODE:InGamemodeVote() ) then return end
-	if ( !GAMEMODE:IsValidGamemode( gamemode ) ) then return end
-	
-	ply:SetNWString( "Wants", gamemode )
-	
+	ply:SetNWString("Wants",gm)
 end
 
-concommand.Add( "votegamemode", function( pl, cmd, args ) GAMEMODE:VotePlayGamemode( pl, args[1] ) end )
+concommand.Add("votegamemode",function(ply,_,args)
+	GAMEMODE:VotePlayGamemode(ply,args[1])
+end)
 
-function GM:VotePlayMap( ply, map )
-	
-	if ( !map ) then return end
-	if ( !GAMEMODE.WinningGamemode ) then return end
-	if ( !GAMEMODE:InGamemodeVote() ) then return end
-	if ( !GAMEMODE:IsValidGamemode( GAMEMODE.WinningGamemode, map ) ) then return end
-	
-	ply:SetNWString( "Wants", map )
-	
+function GM:VotePlayMap(ply,map)
+	if
+		not map
+	or	self.WinningGamemode
+	or	not self:InGamemodeVote()
+	or	not self:IsValidGamemode(self.WinningGamemode,map)
+	then return end
+
+	ply:SetNWString("Wants",map)
 end
 
-concommand.Add( "votemap", function( pl, cmd, args ) GAMEMODE:VotePlayMap( pl, args[1] ) end )
+concommand.Add("votemap",function(ply,_,args)
+	GAMEMODE:VotePlayMap(ply,args[1])
+end)
 
 function GM:GetFractionOfPlayersThatWantChange()
+	local humans = player.GetHumans()
+	local numHumans = #humans
+	local wantsChange = 0
 
-	local Humans = player.GetHumans()
-	local NumHumans = #Humans
-	local WantsChange = 0
-	
-	for k, player in pairs( Humans ) do
-	
-		if ( player:GetNWBool( "WantsVote" ) ) then
-			WantsChange = WantsChange + 1
+	for _,ply in pairs(humans) do
+		if ply:GetNWBool("WantsVote") then
+			wantsChange = wantsChange + 1
 		end
-		
+
 		-- Don't count players that aren't connected yet
-		if ( !player:IsConnected() ) then
-			NumHumans = NumHumans - 1
-		end
-	
+		if ply:IsConnected() then continue end
+		numHumans = numHumans - 1
 	end
-	
-	local fraction = WantsChange / NumHumans
-	
-	return fraction, NumHumans, WantsChange
 
+	return wantsChange / numHumans,numHumans,wantsChange
 end
 
 function GM:GetVotesNeededForChange()
+	local _,numHumans,wantsChange = GAMEMODE:GetFractionOfPlayersThatWantChange()
 
-	local Fraction, NumHumans, WantsChange = GAMEMODE:GetFractionOfPlayersThatWantChange()
-	local FractionNeeded = fretta_votesneeded:GetFloat()
-	
-	local VotesNeeded = math.ceil( FractionNeeded * NumHumans )
-	
-	return VotesNeeded - WantsChange
-
+	return math.ceil(fretta_votesneeded:GetFloat() * numHumans) - wantsChange
 end
 
 function GM:CountVotesForChange()
+	 -- can't vote too early on
+	if CurTime() >= fretta_votegraceperiod:GetFloat() then
+		if self:InGamemodeVote() then return end
 
-	if ( CurTime() >= GetConVarNumber( "fretta_votegraceperiod" ) ) then -- can't vote too early on
-	
-		if ( GAMEMODE:InGamemodeVote() ) then return end
+		if self:GetFractionOfPlayersThatWantChange() > fretta_votesneeded:GetFloat() then
+			self:StartGamemodeVote()
 
-		fraction = GAMEMODE:GetFractionOfPlayersThatWantChange()
-		
-		if ( fraction > fretta_votesneeded:GetFloat() ) then
-			GAMEMODE:StartGamemodeVote()
 			return false
 		end
-		
 	end
 
 	return true
 end
 
-function GM:VoteForChange( ply )
+function GM:VoteForChange(ply)
+	if not fretta_voting:GetBool() or ply:GetNWBool("WantsVote") then return end
+	ply:SetNWBool("WantsVote",true)
 
-	if ( GetConVarNumber( "fretta_voting" ) == 0 ) then return end
-	if ( ply:GetNWBool( "WantsVote" ) ) then return end
-	
-	ply:SetNWBool( "WantsVote", true )
-	
-	local VotesNeeded = GAMEMODE:GetVotesNeededForChange()
-	local NeedTxt = "" 
-	if ( VotesNeeded > 0 ) then NeedTxt = ", Color( 80, 255, 50 ), [[ (need "..VotesNeeded.." more) ]] " end
-	
-	if ( CurTime() < GetConVarNumber( "fretta_votegraceperiod" ) ) then -- can't vote too early on
-		local timediff = math.Round( GetConVarNumber( "fretta_votegraceperiod" ) - CurTime() );
-		BroadcastLua( "chat.AddText( Entity("..ply:EntIndex().."), Color( 255, 255, 255 ), [[ voted to change the gamemode]] )" )
-	else
-		BroadcastLua( "chat.AddText( Entity("..ply:EntIndex().."), Color( 255, 255, 255 ), [[ voted to change the gamemode]] "..NeedTxt.." )" )
+	local votesNeeded = self:GetVotesNeededForChange()
+	local needTxt = ""
+
+	if votesNeeded > 0 and CurTime() >= fretta_votegraceperiod:GetFloat() then
+		needTxt = ",Color(80,255,50),[[ (need " .. votesNeeded .. " more)]]"
 	end
-	
-	Msg( ply:Nick() .. " voted to change the gamemode\n" )
-	
-	timer.Simple( 5, function() GAMEMODE:CountVotesForChange() end )
 
+	-- can't vote too early on
+	BroadcastLua("chat.AddText(Entity(" .. ply:EntIndex() .. "),color_white,[[ voted to change the gamemode]]" .. needTxt .. ")")
+
+	MsgN(ply:GetName() .. " voted to change the gamemode")
+
+	timer.Simple(5,function()
+		self:CountVotesForChange()
+	end)
 end
 
-concommand.Add( "VoteForChange", function( pl, cmd, args ) GAMEMODE:VoteForChange( pl ) end )
-timer.Create( "VoteForChangeThink", 10, 0, function() if ( GAMEMODE ) then GAMEMODE.CountVotesForChange( GAMEMODE ) end end )
+concommand.Add("VoteForChange",function(ply)
+	GAMEMODE:VoteForChange(ply)
+end)
 
+timer.Create("VoteForChangeThink",10,0,function()
+	if not GAMEMODE then return end
+
+	GAMEMODE:CountVotesForChange()
+end)
 
 function GM:ClearPlayerWants()
-
-	for k, ply in pairs( player.GetAll() ) do
-		ply:SetNWString( "Wants", "" )
+	for _,ply in player.Iterator() do
+		ply:SetNWString("Wants","")
 	end
-	
 end
 
-
 function GM:StartGamemodeVote()
+	if GAMEMODE.m_bVotingStarted then return end
+	SetGlobalBool("InGamemodeVote",true)
 
-	if( !GAMEMODE.m_bVotingStarted ) then
-		SetGlobalBool( "InGamemodeVote", true )
+	if fretta_voting:GetBool() then
+		if table.Count(g_PlayableGamemodes) >= 2 then
+			self:ClearPlayerWants()
 
-		if ( fretta_voting:GetBool() ) then
-			if table.Count( g_PlayableGamemodes ) >= 2 then
-				GAMEMODE:ClearPlayerWants()
-				BroadcastLua( "GAMEMODE:ShowGamemodeChooser()" )
-				timer.Simple( fretta_votetime:GetFloat(), function() GAMEMODE:FinishGamemodeVote() end )
-				SetGlobalFloat( "VoteEndTime", CurTime() + fretta_votetime:GetFloat() )
-			else
-				GAMEMODE.WinningGamemode = GAMEMODE:WorkOutWinningGamemode()
-				GAMEMODE:StartMapVote()
-			end
+			net.Start("ShowGamemodeChooser")
+			net.Broadcast()
+
+			local voteTime = fretta_votetime:GetFloat()
+			SetGlobalFloat("VoteEndTime",CurTime() + voteTime)
+
+			timer.Simple(voteTime,function()
+				self:FinishGamemodeVote()
+			end)
 		else
-			GAMEMODE.WinningGamemode = GAMEMODE.FolderName
-			GAMEMODE:StartMapVote()
+			self.WinningGamemode = self:WorkOutWinningGamemode()
+			self:StartMapVote()
 		end
-		
-		GAMEMODE.m_bVotingStarted = true;
+	else
+		self.WinningGamemode = self.FolderName
+		self:StartMapVote()
 	end
+
+	self.m_bVotingStarted = true
 end
 
 function GM:StartMapVote()
-	
 	-- If there's only one map, let the 'random map' thing choose it
-	if ( GetNumberOfGamemodeMaps( GAMEMODE.WinningGamemode ) == 1 ) then
-		return GAMEMODE:FinishMapVote( true )
-	end		
-		
-	BroadcastLua( "GAMEMODE:ShowMapChooserForGamemode( \""..GAMEMODE.WinningGamemode.."\" )" );	
-	timer.Simple( fretta_votetime:GetFloat(), function() GAMEMODE:FinishMapVote() end )
-	SetGlobalFloat( "VoteEndTime", CurTime() + fretta_votetime:GetFloat() )
+	if GetNumberOfGamemodeMaps(self.WinningGamemode) == 1 then
+		return self:FinishMapVote(true)
+	end
 
+	net.Start("ShowMapChooserForGamemode")
+		net.WriteString(self.WinningGamemode)
+	net.Broadcast()
+
+	local voteTime = fretta_votetime:GetFloat()
+	SetGlobalFloat("VoteEndTime",CurTime() + voteTime)
+
+	timer.Simple(voteTime,function()
+		self:FinishMapVote()
+	end)
 end
 
 function GM:GetWinningWant()
+	local votes = {}
 
-	local Votes = {}
-	
-	for k, ply in pairs( player.GetAll() ) do
-	
-		local want = ply:GetNWString( "Wants", nil )
-		if ( want && want != "" ) then
-			Votes[ want ] = Votes[ want ] or 0
-			Votes[ want ] = Votes[ want ] + 1			
-		end
-		
+	for _,ply in player.Iterator() do
+		local want = ply:GetNWString("Wants",nil)
+		if not want or want == "" then continue end
+
+		votes[want] = votes[want] and votes[want] + 1 or 0
 	end
-	
-	return table.GetWinningKey( Votes )
-	
+
+	return table.GetWinningKey(votes)
 end
 
 function GM:WorkOutWinningGamemode()
-
-	if ( GAMEMODE.WinningGamemode ) then return GAMEMODE.WinningGamemode end
-	
-	-- Gamemode Voting disabled, return current gamemode
-	if ( !fretta_voting:GetBool() ) then
-		return GAMEMODE.FolderName
+	if self.WinningGamemode then
+		return self.WinningGamemode
 	end
 
-	local winner = GAMEMODE:GetWinningWant()
-	if ( !winner ) then return GetRandomGamemodeName() end
-	
+	-- Gamemode Voting disabled, return current gamemode
+	if not fretta_voting:GetBool() then
+		return self.FolderName
+	end
+
+	local winner = self:GetWinningWant()
+	if not winner then
+		return GetRandomGamemodeName()
+	end
+
 	return winner
-	
 end
 
-function GM:GetWinningMap( WinningGamemode )
+function GM:GetWinningMap()
+	if self.WinningMap then
+		return self.WinningMap
+	end
 
-	if ( GAMEMODE.WinningMap ) then return GAMEMODE.WinningMap end
+	local winner = self:GetWinningWant()
+	if not winner then
+		return GetRandomGamemodeMap(self.WinningGamemode)
+	end
 
-	local winner = GAMEMODE:GetWinningWant()
-	if ( !winner ) then return GetRandomGamemodeMap( GAMEMODE.WinningGamemode ) end
-	
 	return winner
-	
 end
 
 function GM:FinishGamemodeVote()
-	
-	GAMEMODE.WinningGamemode = GAMEMODE:WorkOutWinningGamemode()
-	GAMEMODE:ClearPlayerWants()
-	
+	self.WinningGamemode = self:WorkOutWinningGamemode()
+	self:ClearPlayerWants()
+
 	-- Send bink bink notification
-	BroadcastLua( "GAMEMODE:GamemodeWon( '"..GAMEMODE.WinningGamemode.."' )" );
+	net.Start("GamemodeWon")
+		net.WriteString(self.WinningGamemode)
+	net.Broadcast()
 
 	-- Start map vote..
-	timer.Simple( 2, function() GAMEMODE:StartMapVote() end )
-	
+	timer.Simple(2,function()
+		self:StartMapVote()
+	end)
 end
 
 function GM:FinishMapVote()
-	
-	GAMEMODE.WinningMap = GAMEMODE:GetWinningMap()
-	GAMEMODE:ClearPlayerWants()
-	
+	self.WinningMap = self:GetWinningMap()
+	self:ClearPlayerWants()
+
 	if self.WinningMap then
 		-- Send bink bink notification
-		BroadcastLua( "GAMEMODE:ChangingGamemode( '"..GAMEMODE.WinningGamemode.."', '"..GAMEMODE.WinningMap.."' )" );
+		net.Start("ChangingGamemode")
+			net.WriteString(self.WinningGamemode)
+			net.WriteString(self.WinningMap)
+		net.Broadcast()
 
 		-- Start map vote?
-		timer.Simple( 3, function() GAMEMODE:ChangeGamemode() end )
+		timer.Simple(3,function()
+			self:ChangeGamemode()
+		end)
 	else
 		-- Notifies the server owner of the issue
 		ErrorNoHalt("No maps for this gamemode, forcing map to gm_construct\nPlease change this as soon as you can!\n")
 
 		--Picks gm_construct to prevent the server from halting
-		GAMEMODE.WinningMap = "gm_construct"
-		timer.Simple( 3, function() 
-			RunConsoleCommand( "gamemode", GAMEMODE.WorkOutWinningGamemode())
-			RunConsoleCommand( "changelevel", GAMEMODE.WinningMap )
+		self.WinningMap = "gm_construct"
+
+		timer.Simple(3,function()
+			RunConsoleCommand("gamemode",self:WorkOutWinningGamemode())
+			RunConsoleCommand("changelevel",self.WinningMap)
 		end)
 	end
 end
 
 function GM:ChangeGamemode()
-	
-	local gm = GAMEMODE:WorkOutWinningGamemode()
-	local mp = GAMEMODE:GetWinningMap()
-	
-	RunConsoleCommand( "gamemode", gm )
-	RunConsoleCommand( "changelevel", mp )
-	
+	RunConsoleCommand("gamemode",self:WorkOutWinningGamemode())
+	RunConsoleCommand("changelevel",self:GetWinningMap())
 end
