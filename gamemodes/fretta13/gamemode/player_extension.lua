@@ -218,3 +218,22 @@ end
 function PlyMeta:AddFrags(frags)
 	self:SetFrags(self:Frags() + frags)
 end
+
+-- Overwrite old ChatPrint with custom one
+-- Uses net library instead of archaic usermessage library
+function PlyMeta:ChatPrint(message)
+	if not message then return end
+
+	net.Start("PlayerChatPrint")
+		net.WriteString(tostring(message))
+	net.Send(self)
+end
+
+if not CLIENT then return end
+
+net.Receive("PlayerChatPrint",function()
+	local message = net.ReadString()
+	if not message then return end
+
+	chat.AddText(message)
+end)

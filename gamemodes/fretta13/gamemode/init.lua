@@ -40,6 +40,7 @@ util.AddNetworkString("ShowMapChooserForGamemode")
 util.AddNetworkString("ShowClassChooser")
 util.AddNetworkString("GamemodeWon")
 util.AddNetworkString("ChangingGamemode")
+util.AddNetworkString("PlayerChatPrint")
 
 include("shared.lua")
 include("sv_gmchanger.lua")
