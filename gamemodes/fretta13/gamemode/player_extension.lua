@@ -37,6 +37,8 @@ end
 
 function PlyMeta:CheckPlayerClassOnSpawn()
 	local classes = team.GetClass(self:Team())
+	if not classes then return end
+
 	local classCount = #classes
 
 	-- The player has requested to spawn as a new class
