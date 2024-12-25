@@ -31,7 +31,6 @@ AddCSLuaFile("player_colours.lua")
 
 util.AddNetworkString("PlayableGamemodes")
 util.AddNetworkString("RoundAddedTime")
-util.AddNetworkString("PlayableGamemodes")
 util.AddNetworkString("fretta_teamchange")
 util.AddNetworkString("ShowHelp")
 util.AddNetworkString("ShowTeam")
@@ -237,7 +236,7 @@ function GM:PlayerSetModel(ply)
 end
 
 function GM:AutoTeam(ply)
-	if not (self.AllowAutoTeam or self.TeamBased) then return end
+	if not (self.AllowAutoTeam and self.TeamBased) then return end
 
 	self:PlayerRequestTeam(ply,team.BestAutoJoinTeam())
 end
@@ -348,22 +347,21 @@ function GM:OnPlayerChangedTeam(ply,oldTeam,newTeam)
 	-- re-create something more like CS or some shit you could probably
 	-- change to a spectator or something while dead.
 	if newTeam == TEAM_SPECTATOR then -- If we changed to spectator mode, respawn where we are
-		local Pos = ply:EyePos()
 		ply:Spawn()
-		ply:SetPos(Pos)
+		ply:SetPos(ply:EyePos())
 	elseif oldTeam == TEAM_SPECTATOR then -- If we're changing from spectator, join the game
 		if not self.NoAutomaticSpawning then
 			ply:Spawn()
 		end
 	elseif oldTeam ~= TEAM_SPECTATOR then
 		ply.LastTeamChange = CurTime()
-	-- else
+	--else
 		-- If we're straight up changing teams just hang
 		-- around until we're ready to respawn onto the 
 		-- team that we chose
 	end
 
-	-- PrintMessage( HUD_PRINTTALK, Format( "%s joined '%s'", ply:Nick(), team.GetName( newteam ) ) )
+	-- PrintMessage(HUD_PRINTTALK,Format("%s joined '%s'",ply:GetName(),team.GetName(newteam)))
 	-- Send net msg for team change
 	net.Start("fretta_teamchange")
 		net.WriteEntity(ply)

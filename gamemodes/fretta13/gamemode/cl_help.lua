@@ -1,5 +1,3 @@
-g_Help = g_Help or nil
-
 local cvFrettaVoting = GetConVar("fretta_voting")
 local cvPlayerModel = GetConVar("cl_playermodel")
 local cvPlayerColor = GetConVar("cl_playercolor")
@@ -81,6 +79,7 @@ local function CreateColorPanel()
 
 		icon:SetSize(32,128)
 		icon:SetTooltip(name)
+
 		pnl:AddItem(icon)
 	end
 
@@ -91,13 +90,13 @@ function GM:ShowHelp()
 	local ply = LocalPlayer()
 	if not IsValid(ply) then return end
 
-	if not IsValid(g_Help) then
-		g_Help = vgui.CreateFromTable(vgui_Select)
+	if not IsValid(g_VGUI_Help) then
+		local help = vgui.CreateFromTable(g_VGUI_Select)
+		g_VGUI_Help = help
+		help:SetHeaderText(self.Name or "Untitled Gamemode")
+		help:SetHoverText(self.Help or "No Help Avaliable")
 
-		g_Help:SetHeaderText(self.Name or "Untitled Gamemode")
-		g_Help:SetHoverText(self.Help or "No Help Avaliable")
-
-		g_Help.lblFooterText.Think = function(panel)
+		help.lblFooterText.Think = function(panel)
 			local tl = self:GetGameTimeLeft()
 			if tl == -1 then return end
 
@@ -117,14 +116,14 @@ function GM:ShowHelp()
 		end
 
 		if cvFrettaVoting:GetBool() then
-			local btn = g_Help:AddSelectButton("Vote For Change",VoteForChange)
+			local btn = help:AddSelectButton("Vote For Change",VoteForChange)
 
 			btn.m_colBackground = ColorYellow
 			btn:SetDisabled(ply:GetNWBool("WantsVote"))
 		end
 
 		if self.TeamBased then
-			local btn = g_Help:AddSelectButton("Change Team",ChangeTeam)
+			local btn = help:AddSelectButton("Change Team",ChangeTeam)
 
 			btn.m_colBackground = ColorGreen
 		end
@@ -144,36 +143,36 @@ function GM:ShowHelp()
 				colBackground = ColorGray
 			end
 
-			local btn = g_Help:AddSelectButton(btnString,function()
+			local btn = help:AddSelectButton(btnString,function()
 				RunConsoleCommand("changeteam",newTeam)
 			end)
 
 			btn.m_colBackground = colBackground
 		end
 
-		local Classes = team.GetClass(teamID)
+		local classes = team.GetClass(teamID)
 
-		if Classes and #Classes > 1 then
-			local btn = g_Help:AddSelectButton("Change Class",function()
+		if classes and #classes > 1 then
+			local btn = help:AddSelectButton("Change Class",function()
 				self:ShowClassChooser(teamID)
 			end)
 
 			btn.m_colBackground = ColorGreen
 		end
 
-		g_Help:AddCancelButton()
+		help:AddCancelButton()
 
 		if self.SelectModel then
-			g_Help:AddPanelButton("icon16/user.png","Choose Player Model",CreateModelPanel)
+			help:AddPanelButton("icon16/user.png","Choose Player Model",CreateModelPanel)
 		end
 
 		if self.SelectColor then
-			g_Help:AddPanelButton("icon16/application_view_tile.png","Choose Player Color",CreateColorPanel)
+			help:AddPanelButton("icon16/application_view_tile.png","Choose Player Color",CreateColorPanel)
 		end
 	end
 
-	g_Help:MakePopup()
-	g_Help:NoFadeIn()
+	help:MakePopup()
+	help:NoFadeIn()
 end
 
 net.Receive("ShowHelp",function()

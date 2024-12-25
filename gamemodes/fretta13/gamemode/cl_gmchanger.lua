@@ -1,60 +1,61 @@
 include("vgui/vgui_vote.lua")
 
 g_PlayableGamemodes = g_PlayableGamemodes or {}
-g_bGotGamemodesTable = false
 
 net.Receive("PlayableGamemodes",function()
 	g_PlayableGamemodes = net.ReadTable()
 	g_bGotGamemodesTable = true
 end)
 
-local GMChooser = nil
 local function GetVoteScreen()
 	LocalPlayer():ConCommand("-score")
-	if IsValid(GMChooser) then return GMChooser end
 
-	GMChooser = vgui.Create("VoteScreen")
+	if IsValid(g_VGUI_VoteScreen) then
+		return g_VGUI_VoteScreen
+	end
 
-	return GMChooser
+	g_VGUI_VoteScreen = vgui.Create("VoteScreen")
+
+	return g_VGUI_VoteScreen
 end
 
 function GM:ShowGamemodeChooser()
-	local votescreen = GetVoteScreen()
+	local voteScreen = GetVoteScreen()
 
-	votescreen:ChooseGamemode()
+	voteScreen:ChooseGamemode()
 end
 
 function GM:GamemodeWon(mode)
-	local votescreen = GetVoteScreen()
+	local voteScreen = GetVoteScreen()
 
-	votescreen:FlashItem(mode)
+	voteScreen:FlashItem(mode)
 end
 
 function GM:ChangingGamemode(_,map)
-	local votescreen = GetVoteScreen()
+	local voteScreen = GetVoteScreen()
 
-	votescreen:FlashItem(map)
+	voteScreen:FlashItem(map)
 end
 
 function GM:ShowMapChooserForGamemode(gmName)
-	local votescreen = GetVoteScreen()
+	local voteScreen = GetVoteScreen()
 
-	votescreen:ChooseMap(gmName)
+	voteScreen:ChooseMap(gmName)
 end
 
-local ClassChooser = nil
 local cvClassSuicide = CreateConVar("cl_classsuicide",0,FCVAR_ARCHIVE,nil,0,1)
 
 function GM:ShowClassChooser(teamID)
 	if not self.SelectClass then return end
 
-	if ClassChooser then
-		ClassChooser:Remove()
+	if g_VGUI_ClassChooser then
+		g_VGUI_ClassChooser:Remove()
 	end
 
-	ClassChooser = vgui.CreateFromTable(vgui_Select)
-	ClassChooser:SetHeaderText("Choose Class")
-	ClassChooser:SetHoverText("What class do you want to be?")
+	local classChooser = vgui.CreateFromTable(g_VGUI_Select)
+	g_VGUI_ClassChooser = classChooser
+	classChooser:SetHeaderText("Choose Class")
+	classChooser:SetHoverText("What class do you want to be?")
 
 	for idx,class in SortedPairs(team.GetClass(teamID)) do
 		local displayname = class
@@ -70,7 +71,7 @@ function GM:ShowClassChooser(teamID)
 			description = classTbl.Description
 		end
 
-		local btn = ClassChooser:AddSelectButton(displayname,function()
+		local btn = classChooser:AddSelectButton(displayname,function()
 			if cvClassSuicide:GetBool() then
 				RunConsoleCommand("kill")
 			end
@@ -81,9 +82,9 @@ function GM:ShowClassChooser(teamID)
 		btn.m_colBackground = team.GetColor(teamID)
 	end
 
-	ClassChooser:AddCancelButton()
-	ClassChooser:MakePopup()
-	ClassChooser:NoFadeIn()
+	classChooser:AddCancelButton()
+	classChooser:MakePopup()
+	classChooser:NoFadeIn()
 end
 
 net.Receive("ShowGamemodeChooser",function()

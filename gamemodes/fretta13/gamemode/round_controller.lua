@@ -1,16 +1,16 @@
-function GM:SetRoundWinner(ply,resulttext)
+function GM:SetRoundWinner(ply,resultTxt)
 	SetGlobalEntity("RoundWinner",ply)
-	SetGlobalString("RRText",tostring(resulttext))
+	SetGlobalString("RRText",tostring(resultTxt))
 end
 
-function GM:SetRoundResult(i,resulttext)
-	SetGlobalInt("RoundResult",i)
-	SetGlobalString("RRText",tostring(resulttext))
+function GM:SetRoundResult(teamID,resultTxt)
+	SetGlobalInt("RoundResult",teamID)
+	SetGlobalString("RRText",tostring(resultTxt))
 end
 
 function GM:ClearRoundResult()
 	SetGlobalEntity("RoundWinner",NULL)
-	SetGlobalInt("RoundResult",0)
+	SetGlobalInt("RoundResult",TEAM_UNASSIGNED)
 	SetGlobalString("RRText","")
 end
 
@@ -29,14 +29,14 @@ end
 function GM:OnRoundEnd()
 end
 
+-- The fact that result might not be a team
+-- shouldn't matter when calling this..
 function GM:OnRoundResult(result)
-	-- The fact that result might not be a team 
-	-- shouldn't matter when calling this..
 	team.AddScore(result,1)
 end
 
+-- Do whatever you want to do with the winner here (this is only called in Free For All gamemodes)...
 function GM:OnRoundWinner(ply)
-	-- Do whatever you want to do with the winner here (this is only called in Free For All gamemodes)...
 	ply:AddFrags(1)
 end
 
@@ -145,19 +145,19 @@ function GM:RoundStart()
 end
 
 -- Decide what text should show when a team/player wins
-function GM:ProcessResultText(_,resulttext)
-	if resulttext == nil then
-		resulttext = ""
+function GM:ProcessResultText(_,resultTxt)
+	if resultTxt == nil then
+		resultTxt = ""
 	end
 
 	-- the result could either be a number or a player!
-	-- for a free for all you could do... if type(result) == "Player" and IsValid( result ) then return result:Name().." is the winner" or whatever
-	return resulttext
+	-- for a free for all you could do... if type(result) == "Player" and IsValid( result ) then return result:GetName().." is the winner" or whatever
+	return resultTxt
 end
 
 -- Round Ended with Result
-function GM:RoundEndWithResult(result,resulttext)
-	resulttext = self:ProcessResultText(result,resulttext)
+function GM:RoundEndWithResult(result,resultTxt)
+	resultTxt = self:ProcessResultText(result,resultTxt)
 
 	local setFunc,onFunc
 
@@ -171,9 +171,9 @@ function GM:RoundEndWithResult(result,resulttext)
 		onFunc = self.OnRoundWinner
 	end
 
-	setFunc(self,result,resulttext)
+	setFunc(self,result,resultTxt)
 	self:RoundEnd()
-	onFunc(self,result,resulttext)
+	onFunc(self,result,resultTxt)
 end
 
 -- Internal, override OnRoundEnd if you want to do stuff here
@@ -193,6 +193,7 @@ function GM:RoundEnd()
 	timer.Remove("RoundEndTimer")
 	timer.Remove("CheckRoundEnd")
 	SetGlobalFloat("RoundEndTime",-1)
+
 	timer.Simple(self.RoundPostLength,function()
 		self:PreRoundStart(roundNum + 1)
 	end)
@@ -205,11 +206,9 @@ function GM:GetTeamAliveCounts()
 		local plyTeam = ply:Team()
 
 		if
-			not (
-				ply:Alive()
-			and	plyTeam > TEAM_CONNECTING
-			and	plyTeam < TEAM_UNASSIGNED
-		)
+			not ply:Alive()
+		or	plyTeam <= TEAM_CONNECTING
+		or	plyTeam >= TEAM_UNASSIGNED
 		then continue end
 
 		teamCounter[plyTeam] = teamCounter[plyTeam] and teamCounter[plyTeam] + 1 or 1
@@ -228,7 +227,7 @@ function GM:CheckPlayerDeathRoundEnd()
 	if teamCount == 0 then
 		self:RoundEndWithResult(TEAM_UNASSIGNED,"Draw, everyone loses!")
 	elseif teamCount == 1 then
-		self:RoundEndWithResult(1)
+		self:RoundEndWithResult(next(teams))
 	end
 end
 
@@ -262,9 +261,17 @@ end
 function GM:RoundTimerEnd()
 	if not self:InRound() then return end
 
-	local ply = self:SelectCurrentlyWinningPlayer()
+	local result
 
-	self:RoundEndWithResult((self.TeamBased and IsValid(ply)) and ply or -1,"Time Up")
+	if not self.TeamBased then
+		local winner = self:SelectCurrentlyWinningPlayer()
+
+		result = IsValid(winner) and winner
+	end
+
+	result = result or -1
+
+	self:RoundEndWithResult(result,"Time Up")
 end
 
 -- This is called when time runs out and there is no winner chosen yet (free for all gamemodes only)

@@ -330,13 +330,15 @@ function SelectScreen:Paint()
 	GAMEMODE:PaintSplashScreen(self:GetWide(),self:GetTall())
 end
 
-vgui_Select = vgui.RegisterTable(SelectScreen,"DPanel")
-g_TeamPanel = g_TeamPanel or nil
+g_VGUI_Select = vgui.RegisterTable(SelectScreen,"DPanel")
 
 function GM:ShowTeam()
-	if not IsValid(g_TeamPanel) then
-		g_TeamPanel = vgui.CreateFromTable(vgui_Select)
-		g_TeamPanel:SetHeaderText("Choose Team")
+	local teamPanel = g_VGUI_TeamPanel
+
+	if not IsValid(teamPanel) then
+		teamPanel = vgui.CreateFromTable(g_VGUI_Select)
+		g_VGUI_TeamPanel = teamPanel
+		teamPanel:SetHeaderText("Choose Team")
 
 		local allTeams = team.GetAllTeams()
 		for teamID,teamInfo in SortedPairs(allTeams) do
@@ -348,12 +350,12 @@ function GM:ShowTeam()
 			then continue end
 
 			if teamID == TEAM_SPECTATOR then
-				g_TeamPanel:AddSpacer(10)
+				teamPanel:AddSpacer(10)
 			end
 
 			local strName = teamInfo.Name
 
-			local btn = g_TeamPanel:AddSelectButton(strName,function()
+			local btn = teamPanel:AddSelectButton(strName,function()
 				RunConsoleCommand("changeteam",teamID)
 			end)
 
@@ -369,10 +371,10 @@ function GM:ShowTeam()
 			btn:SetDisabled(true)
 		end
 
-		g_TeamPanel:AddCancelButton()
+		teamPanel:AddCancelButton()
 	end
 
-	g_TeamPanel:MakePopup()
+	teamPanel:MakePopup()
 end
 
 net.Receive("ShowTeam",function()

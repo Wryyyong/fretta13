@@ -168,7 +168,7 @@ function VoteScreen:PeepThink(peep,ent)
 		return
 	end
 
-	peep:SetTooltip(ent:Nick())
+	peep:SetTooltip(ent:GetName())
 	peep:SetMouseInputEnabled(true)
 
 	if not peep.strVote then

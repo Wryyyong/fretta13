@@ -38,8 +38,9 @@ end
 hook.Add("PlayerInitialSpawn","SendAvailableGamemodes",SendAvailableGamemodes)
 
 local AllMaps = {}
-for key,map in ipairs(file.Find("maps/*.bsp","GAME")) do
-	AllMaps[key] = string.gsub(map,".bsp","")
+
+for mapName,mapFile in ipairs(file.Find("maps/*.bsp","GAME")) do
+	AllMaps[mapName] = string.gsub(mapFile,".bsp","")
 end
 
 for _,gm in ipairs(engine.GetGamemodes()) do

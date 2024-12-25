@@ -46,7 +46,7 @@ function TeamBoardSmall:Think()
 	local str = team.GetName(self.iTeam) .. ": "
 
 	for _,ply in ipairs(players) do
-		str = str .. ply:Name() .. ", "
+		str = str .. ply:GetName() .. ", "
 	end
 
 	str = str:sub(0,-3)

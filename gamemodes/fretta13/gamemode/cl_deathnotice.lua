@@ -2,13 +2,14 @@
 include("vgui/vgui_gamenotice.lua")
 
 hook.Add("InitPostEntity","CreateDeathNotify",function()
-	g_DeathNotify = vgui.Create("DNotify")
-	g_DeathNotify:SetPos(0,25)
-	g_DeathNotify:SetSize(ScrW() - 25,ScrH())
-	g_DeathNotify:SetAlignment(9)
-	g_DeathNotify:SetSkin(GAMEMODE.HudSkin)
-	g_DeathNotify:SetLife(4)
-	g_DeathNotify:ParentToHUD()
+	local deathNotify =  vgui.Create("DNotify")
+	g_VGUI_DeathNotify = deathNotify
+	deathNotify:SetPos(0,25)
+	deathNotify:SetSize(ScrW() - 25,ScrH())
+	deathNotify:SetAlignment(9)
+	deathNotify:SetSkin(GAMEMODE.HudSkin)
+	deathNotify:SetLife(4)
+	deathNotify:ParentToHUD()
 end)
 
 net.Receive("PlayerKilledByPlayer",function()
@@ -50,19 +51,20 @@ end)
    Desc: Adds an death notice entry
 ---------------------------------------------------------]]--
 function GM:AddDeathNotice(victim,inflictor,attacker)
-	if not IsValid(g_DeathNotify) then return end
+	if not IsValid(g_VGUI_DeathNotify) then return end
 
-	local pnl = vgui.Create("GameNotice",g_DeathNotify)
+	local pnl = vgui.Create("GameNotice",g_VGUI_DeathNotify)
 	pnl:AddText(attacker)
 	pnl:AddIcon(inflictor)
 	pnl:AddText(victim)
-	g_DeathNotify:AddItem(pnl)
+
+	g_VGUI_DeathNotify:AddItem(pnl)
 end
 
 function GM:AddPlayerAction(...)
-	if not IsValid(g_DeathNotify) then return end
+	if not IsValid(g_VGUI_DeathNotify) then return end
 
-	local pnl = vgui.Create("GameNotice",g_DeathNotify)
+	local pnl = vgui.Create("GameNotice",g_VGUI_DeathNotify)
 
 	for _,txt in ipairs({...}) do
 		pnl:AddText(txt)
@@ -70,5 +72,5 @@ function GM:AddPlayerAction(...)
 
 	-- The rest of the arguments should be re-thought.
 	-- Just create the notify and add them instead of trying to fit everything into this function!???
-	g_DeathNotify:AddItem(pnl)
+	g_VGUI_DeathNotify:AddItem(pnl)
 end

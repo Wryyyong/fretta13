@@ -14,56 +14,56 @@ local SKIN = {
 	["Author"] = "",
 	["DermaVersion"] = 1,
 
-	["bg_color"] = Color(100,100,100,255),
-	["bg_color_sleep"] = Color(70,70,70,255),
-	["bg_color_dark"] = Color(50,50,50,255),
-	["bg_color_bright"] = Color(220,220,220,255),
+	["bg_color"] = Color(100,100,100),
+	["bg_color_sleep"] = Color(70,70,70),
+	["bg_color_dark"] = Color(50,50,50),
+	["bg_color_bright"] = Color(220,220,220),
 
 	["fontFrame"] = "Default",
 
-	["control_color"] = Color(180,180,180,255),
-	["control_color_highlight"] = Color(220,220,220,255),
-	["control_color_active"] = Color(110,150,255,255),
-	["control_color_bright"] = Color(255,200,100,255),
-	["control_color_dark"] = Color(100,100,100,255),
+	["control_color"] = Color(180,180,180),
+	["control_color_highlight"] = Color(220,220,220),
+	["control_color_active"] = Color(110,150,255),
+	["control_color_bright"] = Color(255,200,100),
+	["control_color_dark"] = Color(100,100,100),
 
-	["bg_alt1"] = Color(50,50,50,255),
-	["bg_alt2"] = Color(55,55,55,255),
+	["bg_alt1"] = Color(50,50,50),
+	["bg_alt2"] = Color(55,55,55),
 
-	["listview_hover"] = Color(70,70,70,255),
-	["listview_selected"] = Color(100,170,220,255),
+	["listview_hover"] = Color(70,70,70),
+	["listview_selected"] = Color(100,170,220),
 
-	["text_bright"] = Color(255,255,255,255),
-	["text_normal"] = Color(180,180,180,255),
-	["text_dark"] = Color(20,20,20,255),
-	["text_highlight"] = Color(255,20,20,255),
+	["text_bright"] = color_white,
+	["text_normal"] = Color(180,180,180),
+	["text_dark"] = Color(20,20,20),
+	["text_highlight"] = Color(255,20,20),
 
 	["texGradientUp"] = Material("gui/gradient_up"),
 	["texGradientDown"] = Material("gui/gradient_down"),
 
 	["panel_transback"] = Color(255,255,255,50),
-	["tooltip"] = Color(255,245,175,255),
-	["colPropertySheet"] = Color(170,170,170,255),
+	["tooltip"] = Color(255,245,175),
+	["colPropertySheet"] = Color(170,170,170),
 
 	["colTabInactive"] = Color(170,170,170,155),
-	["colTabShadow"] = Color(60,60,60,255),
-	["colTabText"] = Color(255,255,255,255),
+	["colTabShadow"] = Color(60,60,60),
+	["colTabText"] = color_white,
 	["colTabTextInactive"] = Color(0,0,0,155),
 
 	["fontTab"] = "Default",
 	["colCollapsibleCategory"] = Color(255,255,255,20),
 
-	["colCategoryText"] = Color(255,255,255,255),
-	["colCategoryTextInactive"] = Color(200,200,200,255),
+	["colCategoryText"] = color_white,
+	["colCategoryTextInactive"] = Color(200,200,200),
 
 	["fontCategoryHeader"] = "TabLarge",
-	["colNumberWangBG"] = Color(255,240,150,255),
+	["colNumberWangBG"] = Color(255,240,150),
 
-	["colTextEntryBG"] = Color(240,240,240,255),
-	["colTextEntryBorder"] = Color(20,20,20,255),
-	["colTextEntryText"] = Color(20,20,20,255),
-	["colTextEntryTextHighlight"] = Color(20,200,250,255),
-	["colTextEntryTextHighlight"] = Color(20,200,250,255),
+	["colTextEntryBG"] = Color(240,240,240),
+	["colTextEntryBorder"] = Color(20,20,20),
+	["colTextEntryText"] = Color(20,20,20),
+	["colTextEntryTextHighlight"] = Color(20,200,250),
+	["colTextEntryTextHighlight"] = Color(20,200,250),
 
 	["colMenuBG"] = Color(255,255,255,200),
 	["colMenuBorder"] = Color(0,0,0,200),
@@ -71,7 +71,7 @@ local SKIN = {
 	["colButtonText"] = Color(0,0,0,250),
 	["colButtonTextDisabled"] = Color(0,0,0,100),
 
-	["colButtonBorder"] = Color(20,20,20,255),
+	["colButtonBorder"] = Color(20,20,20),
 	["colButtonBorderHighlight"] = Color(255,255,255,50),
 	["colButtonBorderShadow"] = Color(0,0,0,100),
 
@@ -187,9 +187,9 @@ function SKIN:PaintScorePanelHeader()
 end
 
 local BoxHeight = 21
-local ColorPlyAlive = Color(60,60,60,255)
-local ColorPlyLocal = Color(90,90,90,255)
-local ColorPlyDefault = Color(70,70,70,255)
+local ColorPlyAlive = Color(60,60,60)
+local ColorPlyLocal = Color(90,90,90)
+local ColorPlyDefault = Color(70,70,70)
 --[[---------------------------------------------------------
 	ListViewLabel
 ---------------------------------------------------------]]--
@@ -215,7 +215,7 @@ local ColorScorePanel = Color(200,200,200,150)
 ---------------------------------------------------------]]--
 function SKIN:PaintScorePanel(panel)
 	surface.SetMaterial(matBlurScreen)
-	surface.SetDrawColor(255,255,255,255)
+	surface.SetDrawColor(255,255,255)
 
 	local x,y = panel:LocalToScreen(0,0)
 	--matBlurScreen:SetFloat("$blur",3)
@@ -352,10 +352,10 @@ function SKIN:SchemeGamemodeButton(panel)
 	panel:SetTextInset(8,0)
 end
 
-local ColorPanelButtonDefault = Color(160,160,160,255)
-local ColorPanelButtonDisabled = Color(100,100,100,255)
-local ColorPanelButtonDepressed = Color(150,210,255,255)
-local ColorPanelButtonHovered = Color(200,200,200,255)
+local ColorPanelButtonDefault = Color(160,160,160)
+local ColorPanelButtonDisabled = Color(100,100,100)
+local ColorPanelButtonDepressed = Color(150,210,255)
+local ColorPanelButtonHovered = Color(200,200,200)
 --[[---------------------------------------------------------
 	PanelButton
 ---------------------------------------------------------]]--

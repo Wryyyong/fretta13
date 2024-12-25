@@ -42,8 +42,6 @@ function SplashScreen:Init()
 	self.FadeInTime = RealTime()
 end
 
-local cvIP = GetConVar("ip")
-
 --[[---------------------------------------------------------
    PerformLayout
 ---------------------------------------------------------]]--
@@ -78,7 +76,7 @@ function SplashScreen:PerformLayout()
 		centerY + 200
 	)
 
-	lblIP:SetText(cvIP:GetString())
+	lblIP:SetText(game.GetIPAddress())
 	lblIP:SizeToContents()
 	lblIP:SetPos(
 		self:GetWide() - 100 - lblIP:GetWide(),
@@ -122,10 +120,10 @@ function SplashScreen:Paint()
 	GAMEMODE:PaintSplashScreen(wide,tall)
 end
 
-vgui_Splash = vgui.RegisterTable(SplashScreen,"DButton")
+g_VGUI_Splash = vgui.RegisterTable(SplashScreen,"DButton")
 
 function GM:ShowSplash()
-	local pnl = vgui.CreateFromTable(vgui_Splash)
+	local pnl = vgui.CreateFromTable(g_VGUI_Splash)
 	pnl:MakePopup()
 end
 
