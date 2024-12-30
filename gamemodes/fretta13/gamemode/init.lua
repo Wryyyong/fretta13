@@ -80,7 +80,10 @@ function GM:Think()
 
 	if
 		self.IsEndOfGame
-	or	not (self.RoundBased and self:CanEndRoundBasedGame())
+	or	not (
+			self.RoundBased
+		and	self:CanEndRoundBasedGame()
+	)
 	or	self.RoundBased
 	or	self:GetTimeLimit() > CurTime()
 	then return end
@@ -343,7 +346,7 @@ function GM:PlayerJoinClass(ply,classname)
 end
 
 function GM:OnPlayerChangedTeam(ply,oldTeam,newTeam)
-	-- Here's an immediate respawn thing by default. If you want to 
+	-- Here's an immediate respawn thing by default. If you want to
 	-- re-create something more like CS or some shit you could probably
 	-- change to a spectator or something while dead.
 	if newTeam == TEAM_SPECTATOR then -- If we changed to spectator mode, respawn where we are
@@ -357,7 +360,7 @@ function GM:OnPlayerChangedTeam(ply,oldTeam,newTeam)
 		ply.LastTeamChange = CurTime()
 	--else
 		-- If we're straight up changing teams just hang
-		-- around until we're ready to respawn onto the 
+		-- around until we're ready to respawn onto the
 		-- team that we chose
 	end
 
@@ -379,8 +382,11 @@ function GM:CheckTeamBalance()
 				teamID > TEAM_CONNECTING
 			and	teamID < TEAM_UNASSIGNED
 			and	team.Joinable(teamID)
-			and	(not highest or team.NumPlayers(teamID) > team.NumPlayers(highest))
+			and	(
+					not highest
+				or	team.NumPlayers(teamID) > team.NumPlayers(highest)
 			)
+		)
 		then continue end
 
 		highestID = teamID
@@ -476,20 +482,24 @@ function GM:PlayerShouldTakeDamage(ply,attacker)
 	return
 		not (
 			self.NoPlayerDamage
-		or
+		or	(
 				self.NoPlayerSelfDamage
 			and	ply == attacker
-		or
+		)
+		or	(
 				self.NoPlayerTeamDamage
 			and	attacker.Team
 			and	ply:Team() == attacker:Team()
 			and	ply ~= attacker
-		or
+		)
+		or	(
 				self.NoPlayerPlayerDamage
 			and	attackerIsPlayer
-		or
+		)
+		or	(
 				self.NoNonPlayerPlayerDamage
 			and	not attackerIsPlayer
+		)
 	)
 end
 
@@ -505,7 +515,10 @@ function GM:PlayerDeathThink(ply)
 	if
 		self.DeathLingerTime > 0
 	and	timeDead > self.DeathLingerTime
-	and	(plyObsMode == OBS_MODE_FREEZECAM or plyObsMode == OBS_MODE_DEATHCAM)
+	and	(
+			plyObsMode == OBS_MODE_FREEZECAM
+		or	plyObsMode == OBS_MODE_DEATHCAM
+	)
 	then
 		self:BecomeObserver(ply)
 	end

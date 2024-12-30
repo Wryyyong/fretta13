@@ -1,6 +1,5 @@
 include("vgui/vgui_scoreboard.lua")
 
-
 function GM:GetScoreboard()
 	if IsValid(g_VGUI_Scoreboard) then
 		g_VGUI_Scoreboard:Remove()
@@ -21,8 +20,7 @@ function GM:ScoreboardHide()
 	g_VGUI_Scoreboard:SetVisible(false)
 end
 
-function GM:ScoreboardPlayerPressed()
-end
+function GM:ScoreboardPlayerPressed() end
 
 local function PlyGetAvatar(ply)
 	local avatar = vgui.Create("AvatarImage",g_VGUI_Scoreboard)
@@ -115,7 +113,7 @@ end
 local SortedColumns = {4,true,5,false,3,false}
 
 function GM:CreateScoreboard()
-	local teamBased = self.TeamBased
+	local isTeamBased = self.TeamBased
 
 	-- This makes it so that it's behind chat & hides when you're in the menu
 	-- Disable this if you want to be able to click on stuff on your scoreboard
@@ -124,20 +122,20 @@ function GM:CreateScoreboard()
 	board:SetRowHeight(32)
 	board:SetAsBullshitTeam(TEAM_SPECTATOR)
 	board:SetAsBullshitTeam(TEAM_CONNECTING)
-	board:SetShowScoreboardHeaders(teamBased)
+	board:SetShowScoreboardHeaders(isTeamBased)
 
-	if teamBased then
+	if isTeamBased then
 		board:SetAsBullshitTeam(TEAM_UNASSIGNED)
 		board:SetHorizontal(true)
 	end
 
 	board:SetSkin(self.HudSkin)
-	self:AddScoreboardAvatar(board) -- 1
-	self:AddScoreboardWantsChange(board) -- 2
-	self:AddScoreboardName(board) -- 3
-	self:AddScoreboardKills(board) -- 4
-	self:AddScoreboardDeaths(board) -- 5
-	self:AddScoreboardPing(board) -- 6
+	self:AddScoreboardAvatar(board)
+	self:AddScoreboardWantsChange(board)
+	self:AddScoreboardName(board)
+	self:AddScoreboardKills(board)
+	self:AddScoreboardDeaths(board)
+	self:AddScoreboardPing(board)
 
 	-- Here we sort by these columns (and descending), in this order. You can define up to 4
 	board:SetSortColumns(SortedColumns)

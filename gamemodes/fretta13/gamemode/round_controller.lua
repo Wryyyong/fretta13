@@ -75,7 +75,8 @@ end
 
 -- You can add round time by calling this (takes time in seconds)
 function GM:AddRoundTime(fAddedTime)
-	if not self:InRound() then return end-- don't add time if round is not in progress
+	-- don't add time if round is not in progress
+	if not self:InRound() then return end
 
 	local newEndTime = GetGlobalFloat("RoundEndTime",CurTime()) + fAddedTime
 	SetGlobalFloat("RoundEndTime",newEndTime)
@@ -240,11 +241,11 @@ end
 hook.Add("PlayerDisconnected","RoundCheck_PlayerDisconnect",RoundCheck)
 hook.Add("PostPlayerDeath","RoundCheck_PostPlayerDeath",RoundCheck)
 
--- You should use this to check any round end conditions 
+-- You should use this to check any round end conditions
 function GM:CheckRoundEnd()
-	-- Do checks.. 
-	-- if something then call GAMEMODE:RoundEndWithResult( TEAM_BLUE, "Team Blue Ate All The Mushrooms!" )
-	-- OR for a free for all you could do something like... GAMEMODE:RoundEndWithResult( SomePlayer )
+	-- Do checks..
+	-- if something then call self:RoundEndWithResult(TEAM_BLUE,"Team Blue Ate All The Mushrooms!")
+	-- OR for a free for all you could do something like... self:RoundEndWithResult(SomePlayer)
 end
 
 function GM:CheckRoundEndInternal()

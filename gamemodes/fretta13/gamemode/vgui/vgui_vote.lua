@@ -197,7 +197,10 @@ end
 function VoteScreen:Think()
 	local seconds = GetGlobalFloat("VoteEndTime",0) - CurTime()
 
-	if seconds < 0 then seconds = 0 end
+	if seconds < 0 then
+		seconds = 0
+	end
+
 	self.lblCountDown:SetText(Format("%i",seconds))
 
 	for _,item in ipairs(self.ctrlList:GetItems()) do

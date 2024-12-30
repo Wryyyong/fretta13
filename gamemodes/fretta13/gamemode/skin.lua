@@ -182,7 +182,7 @@ end
 ---------------------------------------------------------]]--
 function SKIN:PaintScorePanelHeader()
 	--(panel)
-	--surface.SetDrawColor(panel.cTeamColor)	
+	--surface.SetDrawColor(panel.cTeamColor)
 	--panel:DrawFilledRect()
 end
 

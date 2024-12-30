@@ -16,15 +16,21 @@ end
 function PlyMeta:GetPlayerClass()
 	-- Class that has been set using SetClass
 	local class = player_class.Get(self:GetPlayerClassName())
-	if class then return class end
+	if class then
+		return class
+	end
 
 	-- Class based on their Team
 	local teamClass = player_class.Get(self:Team())
-	if teamClass then return teamClass end
+	if teamClass then
+		return teamClass
+	end
 
 	-- If all else fails, use the default
 	local defaultClass = player_class.Get("Default")
-	if defaultClass then return defaultClass end
+	if defaultClass then
+		return defaultClass
+	end
 end
 
 function PlyMeta:SetRandomClass()
@@ -49,7 +55,7 @@ function PlyMeta:CheckPlayerClassOnSpawn()
 
 	if classes and classCount > 0 then
 		if classCount == 1 then
-			-- If the player is on a team with only one class, 
+			-- If the player is on a team with only one class,
 			-- make sure we're that one when we spawn.
 			self:SetPlayerClass(classes[1])
 		elseif not table.HasValue(classes,self:GetPlayerClassName()) then
@@ -143,7 +149,7 @@ function PlyMeta:OnDeath()
 end
 
 function PlyMeta:OnPlayerModel()
-	-- If the class forces a player model, use that.. 
+	-- If the class forces a player model, use that..
 	-- If not, use our preferred model..
 	local class = self:GetPlayerClass()
 

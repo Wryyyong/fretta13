@@ -159,7 +159,7 @@ function GM:GetVotesNeededForChange()
 end
 
 function GM:CountVotesForChange()
-	 -- can't vote too early on
+	-- can't vote too early on
 	if CurTime() >= fretta_votegraceperiod:GetFloat() then
 		if self:InGamemodeVote() then return end
 

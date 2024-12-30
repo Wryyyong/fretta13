@@ -11,7 +11,7 @@ function surface.CreateLegacyFont(font,size,weight,antialias,additive,name,shado
 		additive = additive,
 		shadow = shadow,
 		outline = outline,
-		blursize = blursize
+		blursize = blursize,
 	})
 
 	FRETTA_FONT_CHECK[name] = true
@@ -133,7 +133,9 @@ function GM:GetTeamColor(ent)
 
 		if clr and clr ~= -1 and clr ~= "" then
 			clr = list.Get("PlayerColours")[clr]
-			if clr then return clr end
+			if not clr then continue end
+
+			return clr
 		end
 	end
 

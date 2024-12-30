@@ -345,7 +345,10 @@ function GM:ShowTeam()
 			if
 				teamID == TEAM_CONNECTING
 			or	teamID == TEAM_UNASSIGNED
-			or	(self.AllowSpectating and teamID == TEAM_SPECTATOR)
+			or	(
+					self.AllowSpectating
+				and	teamID == TEAM_SPECTATOR
+			)
 			or	not team.Joinable(teamID)
 			then continue end
 

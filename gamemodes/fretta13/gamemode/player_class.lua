@@ -13,7 +13,7 @@ function Get(name)
 	end
 
 	-- Derive class here.
-	-- I have favoured using table.Inherit over using a meta table 
+	-- I have favoured using table.Inherit over using a meta table
 	-- This is to the performance hit is once, now, rather than on every usage
 	if not ClassTables[name].m_HasBeenSetup then
 		ClassTables[name].m_HasBeenSetup = true

@@ -2,7 +2,7 @@
 include("vgui/vgui_gamenotice.lua")
 
 hook.Add("InitPostEntity","CreateDeathNotify",function()
-	local deathNotify =  vgui.Create("DNotify")
+	local deathNotify = vgui.Create("DNotify")
 	g_VGUI_DeathNotify = deathNotify
 	deathNotify:SetPos(0,25)
 	deathNotify:SetSize(ScrW() - 25,ScrH())

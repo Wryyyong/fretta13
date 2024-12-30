@@ -104,7 +104,7 @@ function GM:UpdateHUD_RoundResult()
 	local resultType = type(g_RoundResult)
 
 	if txt == "" then
-		if resultType == "number" and (team.GetAllTeams()[g_RoundResult]) then
+		if resultType == "number" and team.GetAllTeams()[g_RoundResult] then
 			local teamName = team.GetName(g_RoundResult)
 
 			if teamName then
@@ -125,7 +125,12 @@ end
 function GM:UpdateHUD_Observer()
 	local col,lbl,txt = color_white
 
-	if IsValid(g_ObserveTarget) and g_ObserveTarget:IsPlayer() and g_ObserveTarget ~= LocalPlayer() and g_ObserveMode ~= OBS_MODE_ROAMING then
+	if
+		IsValid(g_ObserveTarget)
+	and	g_ObserveTarget:IsPlayer()
+	and	g_ObserveTarget ~= LocalPlayer()
+	and	g_ObserveMode ~= OBS_MODE_ROAMING
+	then
 		lbl = "SPECTATING"
 		txt = g_ObserveTarget:GetName()
 		col = team.GetColor(g_ObserveTarget:Team())

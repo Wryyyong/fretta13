@@ -1,6 +1,6 @@
 --[[---------------------------------------------------------
    Name: UTIL_SpawnAllPlayers
-   Desc: Respawn all non-spectators, providing they are allowed to spawn. 
+   Desc: Respawn all non-spectators, providing they are allowed to spawn.
 ---------------------------------------------------------]]--
 function UTIL_SpawnAllPlayers()
 	for _,ply in player.Iterator() do

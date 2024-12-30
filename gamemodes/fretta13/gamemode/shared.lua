@@ -36,7 +36,7 @@ GM.PlayerCanNoClip = false -- When true, players can use noclip without sv_cheat
 GM.TakeFragOnSuicide = true -- -1 frag on suicide
 GM.MaximumDeathLength = 0 -- Player will repspawn if death length > this (can be 0 to disable)
 GM.MinimumDeathLength = 2 -- Player has to be dead for at least this long
-GM.AutomaticTeamBalance = false -- Teams will be periodically balanced 
+GM.AutomaticTeamBalance = false -- Teams will be periodically balanced
 GM.ForceJoinBalancedTeams = true -- Players won't be allowed to join a team if it has more players than another team
 GM.RealisticFallDamage = false -- Set to true if you want realistic fall damage instead of the fix 10 damage.
 GM.AddFragsToTeamScore = false -- Adds player's individual kills to team score (must be team based)
@@ -53,7 +53,7 @@ GM.SelectColor = false -- Can players modify the colour of their name? (ie.. no 
 GM.PlayerRingSize = 48 -- How big are the colored rings under the player's feet (if they are enabled) ?
 GM.HudSkin = "SimpleSkin" -- The Derma skin to use for the HUD components
 GM.SuicideString = "died" -- The string to append to the player's name when they commit suicide.
-GM.DeathNoticeDefaultColor = Color(255,128,0) -- Default colour for entity kills
+GM.DeathNoticeDefaultColor = Color(255,127,0) -- Default colour for entity kills
 GM.DeathNoticeTextColor = color_white -- colour for text ie. "died", "killed"
 GM.CanOnlySpectateOwnTeam = true -- you can only spectate players on your own team
 
@@ -182,7 +182,7 @@ end
 		 function.
 ---------------------------------------------------------]]--
 function GM:Move(ply,mv)
-	if ply:CallClassFunction("Move",mv) then return true end
+	return ply:CallClassFunction("Move",mv) ~= nil
 end
 
 --[[---------------------------------------------------------
@@ -210,12 +210,12 @@ function GM:KeyRelease(ply,key)
 end
 
 --[[---------------------------------------------------------
-   Name: gamemode:PlayerFootstep( Player ply, Vector pos, Number foot, String sound, Float volume, CReceipientFilter rf )
+   Name: gamemode:PlayerFootstep( Player ply, Vector pos, Number foot, String snd, Float volume, CReceipientFilter rf )
    Desc: Player's feet makes a sound, this also calls the player's class Footstep function.
 		 If you want to disable all footsteps set GM.NoPlayerFootsteps to true.
 		 If you want to disable footsteps on a class, set Class.DisableFootsteps to true.
 ---------------------------------------------------------]]--
-function GM:PlayerFootstep(ply,pos,foot,sound,volume,rf)
+function GM:PlayerFootstep(ply,pos,foot,snd,volume,rf)
 	if
 		self.NoPlayerFootsteps
 	or	not ply:Alive()
@@ -234,8 +234,9 @@ function GM:PlayerFootstep(ply,pos,foot,sound,volume,rf)
 	end
 
 	if not class.Footstep then return end
-	 -- Call footstep function in class, you can use this to make custom footstep sounds
-	return class:Footstep(ply,pos,foot,sound,volume,rf)
+
+	-- Call footstep function in class, you can use this to make custom footstep sounds
+	return class:Footstep(ply,pos,foot,snd,volume,rf)
 end
 
 --[[---------------------------------------------------------
@@ -248,7 +249,7 @@ function GM:CalcView(ply,origin,angles,fov)
 	local view = ply:CallClassFunction("CalcView",origin,angles,fov) or {
 		["origin"] = origin,
 		["angles"] = angles,
-		["fov"] = fov
+		["fov"] = fov,
 	}
 
 	origin = view.origin or origin
@@ -256,13 +257,16 @@ function GM:CalcView(ply,origin,angles,fov)
 	fov = view.fov or fov
 
 	local wep = ply:GetActiveWeapon()
+
 	if IsValid(wep) then
 		local getViewModelPos = wep.GetViewModelPosition
+
 		if getViewModelPos then
 			view.vm_origin,view.vm_angles = getViewModelPos(wep,origin * 1,angles * 1)
 		end
 
 		local calcView = wep.CalcView
+
 		if calcView then
 			view.origin,view.angles,view.fov = calcView(wep,ply,origin * 1,angles * 1,fov)
 		end
@@ -302,7 +306,10 @@ local cvCheats = GetConVar("sv_cheats")
 function GM:PlayerNoClip()
 	-- Allow noclip if we're in single player or have cheats enabled
 	-- Don't if it's not.
-	return self.PlayerCanNoClip or game.SinglePlayer() or cvCheats:GetBool()
+	return
+		self.PlayerCanNoClip
+	or	game.SinglePlayer()
+	or	cvCheats:GetBool()
 end
 
 -- This function includes /yourgamemode/player_class/*.lua
@@ -329,11 +336,11 @@ function util.ToMinutesSeconds(seconds)
 	return string.format("%02d:%02d",minutes,math.floor(seconds))
 end
 
-function util.ToMinutesSecondsMilliseconds(seconds)
-	local minutes = math.floor(seconds / 60)
-	seconds = seconds - minutes * 60
-
+function util.ToMinutesSecondsMilliseconds(inputSeconds)
+	local minutes = math.floor(inputSeconds / 60)
+	local seconds = inputSeconds - minutes * 60
 	local milliseconds = math.floor(seconds % 1 * 100)
+
 	return string.format("%02d:%02d.%02d",minutes,math.floor(seconds),milliseconds)
 end
 
